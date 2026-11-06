@@ -352,6 +352,53 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(4
   display:flex;align-items:center;gap:6px;
 }
 .ann-foot .ann-date .ic{width:1em;height:1em}
+
+/* ---------- اسلایدر اخبار (صفحهٔ اصلی): چند کارت در هر نما + فلش + نقطه ---------- */
+.ann-slider{position:relative}
+.ann-viewport{overflow:hidden;padding-block:8px} /* جا برای سایه/هاور کارت‌ها داخل قاب بماند */
+.ann-slider .ann-list{
+  display:flex;gap:22px;width:100%;
+  transition:transform .5s cubic-bezier(.22,.9,.35,1);
+  will-change:transform;
+}
+.ann-slider .ann-list .empty-state{flex:1 1 100%}
+.ann-slider .ann-card{flex:0 0 calc((100% - 44px)/3);min-width:0} /* ۳ کارت در هر نما */
+@media (max-width:1080px){
+  .ann-slider .ann-card{flex-basis:calc((100% - 22px)/2)} /* تبلت: ۲ کارت */
+}
+@media (max-width:700px){
+  .ann-slider .ann-list{gap:16px}
+  .ann-slider .ann-card{flex-basis:100%} /* موبایل: ۱ کارت */
+}
+/* فلش‌ها («قبلی» راست، «بعدی» چپ — هم‌جهت با بنر صفحهٔ اول) */
+.ann-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+  width:44px;height:44px;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;color:var(--primary);
+  background:var(--surface);border:1.5px solid var(--border);
+  box-shadow:0 6px 18px rgba(12,30,55,.16);
+  transition:background .22s,color .22s,border-color .22s,transform .22s;
+}
+.ann-arrow:hover{background:var(--btn-grad);color:#fff;border-color:transparent;transform:translateY(-50%) scale(1.07)}
+.ann-arrow:active{transform:translateY(-50%) scale(.94)}
+.ann-arrow:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ann-prev{right:-11px}
+.ann-next{left:-11px}
+@media (max-width:560px){
+  .ann-arrow{width:38px;height:38px}
+  .ann-prev{right:-4px}
+  .ann-next{left:-4px}
+}
+/* نقطه‌های صفحه‌بندی (زیر اسلایدر؛ نقطهٔ فعال کش می‌آید) */
+.ann-dots{display:flex;justify-content:center;gap:2px;margin-top:14px}
+.ann-dot{width:26px;height:26px;padding:0;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;border-radius:8px}
+.ann-dot::after{content:'';width:9px;height:9px;border-radius:9px;background:var(--border);transition:width .3s,background .3s}
+.ann-dot[aria-selected="true"]::after{width:28px;background:var(--btn-grad)}
+.ann-dot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+  .ann-slider .ann-list{transition:none}
+}
+
 /* کلیک روی کارت اطلاعیه → صفحهٔ اختصاصی همان اطلاعیه */
 .ann-card{cursor:pointer}
 /* صفحهٔ اختصاصی اطلاعیه: تصویر بالا + متن کامل (Task 44) */
@@ -1308,7 +1355,12 @@ section.hero{scroll-margin-top:0}
 .footer-map-frame .leaflet-control-attribution{font-size:10px;padding:1px 6px;background:rgba(255,255,255,.78);direction:ltr}
 .footer-map-frame .school-pin{background:none;border:none}
 .footer-map-frame .map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#82c1f2;font-size:.85rem;z-index:500;pointer-events:none}
-@media(max-width:640px){.footer-map-frame{height:260px;border-radius:12px}.footer-map{padding-bottom:32px}}
+/* موبایل: نقشه کمی جمع‌وجورتر و بدون چسبیدن به لبه‌های صفحه */
+@media(max-width:640px){
+  .footer-map{padding:0 16px 30px}
+  .footer-map-head{margin-bottom:10px}
+  .footer-map-frame{height:230px;border-radius:14px}
+}
 </style>
 </head>
 
@@ -1437,7 +1489,19 @@ section.hero{scroll-margin-top:0}
     <div class="container">
       <div class="section-head reveal">
         <h2>اخبار مدرسه</h2>      </div>
-      <div class="ann-list" id="annList"></div>
+      <!-- اسلایدر اخبار: چند کارت در هر نما + فلش‌ها و نقطه‌ها (مثل بنر صفحهٔ اول؛ جدیدترین خبر اول) -->
+      <div class="ann-slider" id="annSlider">
+        <div class="ann-viewport" id="annViewport">
+          <div class="ann-list ann-track" id="annList"></div>
+        </div>
+        <button type="button" class="ann-arrow ann-prev" id="annPrev" aria-label="اخبار قبلی">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>
+        </button>
+        <button type="button" class="ann-arrow ann-next" id="annNext" aria-label="اخبار بعدی">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <div class="ann-dots" id="annDots" role="tablist" aria-label="صفحه‌های اخبار"></div>
+      </div>
       <!-- دکمهٔ «مشاهده همه» → صفحهٔ کامل اخبار: جستجو + همهٔ خبرها (جدیدترین اول) -->
       <div class="gallery-more" id="annMore" hidden>
         <button type="button" class="btn btn-outline" id="annMoreBtn"><svg class="ic" aria-hidden="true"><use href="#i-chev-left"/></svg>مشاهده همه</button>
@@ -2528,8 +2592,7 @@ function renderScheduleView(classId) {
     scheduleTableHTML(classId);
 }
 
-/* ---------- اطلاعیه‌ها (صفحهٔ اصلی فقط ۳ خبر؛ بقیه در صفحهٔ «مشاهده همه») ---------- */
-var ANN_PAGE = 3;   // حداکثر خبرهای صفحهٔ اصلی؛ بیشتر از آن با دکمهٔ «مشاهده همه» در صفحهٔ کامل دیده می‌شود
+/* ---------- اطلاعیه‌ها (صفحهٔ اصلی: اسلایدر — همهٔ خبرها صفحه‌به‌صفحه؛ جدیدترین اول) ---------- */
 
 function annItemHtml(a, i) {
   var src = annCardSrc(a);
@@ -2551,8 +2614,9 @@ function updateAnnMore() {
   var total = ANNOUNCEMENTS.length;
   var box = document.getElementById('annMore');
   if (!box) return;
-  // صفحهٔ اصلی فقط ۳ خبر دارد؛ دکمهٔ «مشاهده همه» فقط وقتی هست که خبر بیشتری موجود باشد
-  if (total <= ANN_PAGE) { box.hidden = true; return; }
+  // اسلایدر همهٔ خبرها را صفحه‌بندی می‌کند؛ دکمهٔ «مشاهده همه» (فهرست کامل + جستجو) فقط وقتی کاربرد دارد
+  // که خبر بیشتر از یک نمای اسلایدر (۳ کارت در دسکتاپ) وجود داشته باشد
+  if (!total || total <= 3) { box.hidden = true; return; }
   box.hidden = false;
 }
 
@@ -2622,14 +2686,15 @@ function renderAnnouncements() {
       '<p>خبری برای نمایش وجود ندارد.</p></div>';
     var box0 = document.getElementById('annMore');
     if (box0) box0.hidden = true;
+    if (window.annSliderResize) window.annSliderResize(); // اسلایدر خالی و بدون فلش/نقطه شود
     return;
   }
-  // صفحهٔ اصلی فقط ۳ خبر اول (جدیدترین‌ها) را نشان می‌دهد — بقیه در صفحهٔ «مشاهده همه»
-  var shown = Math.min(ANN_PAGE, items.length);
+  // همهٔ خبرها داخل اسلایدر قرار می‌گیرند؛ اسلایدر آن‌ها را صفحه‌به‌صفحه (۳ کارت در هر نما) نشان می‌دهد
   var html = '';
-  for (var i = 0; i < shown; i++) html += annItemHtml(items[i], i);
+  for (var i = 0; i < items.length; i++) html += annItemHtml(items[i], i);
   list.innerHTML = html;
   updateAnnMore();
+  if (window.annSliderResize) window.annSliderResize(); // بازسازی صفحه‌بندی، نقطه‌ها و چرخش خودکار
 }
 
 /* ---------- صفحهٔ اختصاصی اطلاعیه (کلیک روی کارت → تصویر بالا + متن کامل) ---------- */
@@ -2792,9 +2857,9 @@ function galPhotos(g) {
   if (g.photos && g.photos.length) return g.photos;
   return g.photo ? [g.photo] : [];
 }
-// نمایش گالری در صفحهٔ اصلی: فقط ۲ مجموعهٔ اول؛ بقیه با دکمهٔ «مشاهده همه»
+// نمایش گالری در صفحهٔ اصلی: فقط ۴ مجموعهٔ اول؛ بقیه با دکمهٔ «مشاهده همه»
 // در صفحهٔ کامل گالری دیده می‌شوند (بدون جستجو — درخواست مدیر).
-var GALLERY_PAGE = 2;    // حداکثر مجموعه‌های صفحهٔ اصلی؛ بیشتر از آن دکمهٔ «مشاهده همه» نمایش داده می‌شود
+var GALLERY_PAGE = 4;    // حداکثر مجموعه‌های صفحهٔ اصلی؛ بیشتر از آن دکمهٔ «مشاهده همه» نمایش داده می‌شود
 
 function galleryItemHtml(g, i) {
   var ph = galPhotos(g);
@@ -2814,7 +2879,7 @@ function updateGalleryMore() {
   var total = GALLERY_ITEMS.length;
   var box = document.getElementById('galleryMore');
   if (!box) return;
-  // صفحهٔ اصلی فقط ۲ مجموعه دارد؛ دکمهٔ «مشاهده همه» فقط وقتی هست که مجموعهٔ بیشتری موجود باشد
+  // صفحهٔ اصلی فقط ۴ مجموعه دارد؛ دکمهٔ «مشاهده همه» فقط وقتی هست که مجموعهٔ بیشتری موجود باشد
   if (total <= GALLERY_PAGE) { box.hidden = true; return; }
   box.hidden = false;
 }
@@ -2828,7 +2893,7 @@ function renderGallery() {
     updateGalleryMore();
     return;
   }
-  // صفحهٔ اصلی فقط ۲ مجموعهٔ اول را نشان می‌دهد — بقیه در صفحهٔ «مشاهده همه»
+  // صفحهٔ اصلی فقط ۴ مجموعهٔ اول را نشان می‌دهد — بقیه در صفحهٔ «مشاهده همه»
   var html = '';
   for (var i = 0; i < Math.min(GALLERY_PAGE, GALLERY_ITEMS.length); i++) html += galleryItemHtml(GALLERY_ITEMS[i], i);
   grid.innerHTML = html;
@@ -3576,9 +3641,14 @@ function faDateKey(item) {
   var p = adminDateParts(item || {});
   return p.y * 10000 + p.m * 100 + p.d;
 }
-// مرتب‌سازی اطلاعیه‌ها: جدیدترین تاریخ اول؛ تاریخ‌های برابر ترتیب اصلی را حفظ می‌کنند
+// مرتب‌سازی اطلاعیه‌ها: جدیدترین تاریخ اول؛ تاریخ‌های برابر ترتیب اصلی را حفظ می‌کنند (مرتب‌سازی پایدار)
 function sortAnnouncements(list) {
-  // ترتیب همان ترتیب پنل است: اطلاعیهٔ تازه‌افزوده همیشه اول می‌آید
+  var keys = list.map(function (it) { return faDateKey(it); });
+  var order = list.map(function (it, i) { return i; });
+  order.sort(function (a, b) { return keys[b] - keys[a]; });
+  var sorted = order.map(function (i) { return list[i]; });
+  list.length = 0;
+  for (var i = 0; i < sorted.length; i++) list[i] = sorted[i];
 }
 // آزمون‌ها: ترتیب همان ترتیب پنل است؛ آزمونِ تازه‌افزوده همیشه اول می‌آید
 function sortExams(list) {
@@ -5457,6 +5527,167 @@ function heroRefresh() {
 }
 window.heroRefresh = heroRefresh; // پنل مدیریت و همگام‌سازی زنده پس از ذخیره این تابع را صدا می‌زنند
 heroRefresh();
+</script>
+
+<script type="text/plain" data-app>
+/* اسلایدر اخبار صفحهٔ اصلی: ۳ کارت در هر نما (دسکتاپ)، ۲ (تبلت) و ۱ (موبایل)؛
+   فلش‌ها، نقطه‌ها، چرخش خودکار، کشیدن انگشت و کیبورد — هم‌سبک بنر صفحهٔ اول.
+   جدیدترین خبر همیشه در صفحهٔ اول اسلایدر است (مرتب‌سازی تاریخ در renderAnnouncements).
+   پس از هر تغییر اخبار (ذخیرهٔ مدیر یا همگام‌سازی زنده) renderAnnouncements اجرا می‌شود
+   و با فراخوانی annSliderResize اسلایدر از نو ساخته می‌شود. */
+var ANN_SLIDER = null;
+var ANN_SLIDER_PAGE = 0; // صفحهٔ فعال اسلایدر؛ هنگام بازسازی (تغییر اندازه/ذخیرهٔ مدیر) حفظ می‌شود
+
+function annSliderCreate() {
+  var slider = document.getElementById('annSlider');
+  var track = document.getElementById('annList');
+  if (!slider || !track) return null;
+  var viewport = document.getElementById('annViewport');
+  var dotsWrap = document.getElementById('annDots');
+  var prevBtn = document.getElementById('annPrev');
+  var nextBtn = document.getElementById('annNext');
+  var cards = Array.prototype.slice.call(track.querySelectorAll('.ann-card'));
+  var n = cards.length;
+
+  if (!n) { // خبری نیست: فلش‌ها و نقطه‌ها لازم نیستند
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    dotsWrap.style.display = 'none';
+    track.style.transform = '';
+    return { destroy: function () {} };
+  }
+
+  var INTERVAL = 5500, cur = 0, timer = null, paused = false, offscreen = false;
+  var step = 0, perView = 1, pages = 1;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var faDigits = function (x) { return String(x).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
+  var offs = []; // شنونده‌ها برای پاک‌سازی هنگام بازسازی
+  function on(el, ev, fn, opt) { el.addEventListener(ev, fn, opt); offs.push([el, ev, fn, opt]); }
+
+  /* اندازه‌گیری از چیدمان واقعی: عرض کارت + فاصله → تعداد کارت در هر نما و تعداد صفحه‌ها */
+  function measure() {
+    var gap = parseFloat(getComputedStyle(track).columnGap) || 22;
+    var w = cards[0].getBoundingClientRect().width;
+    if (!w) return;
+    step = w + gap;
+    perView = Math.max(1, Math.round((viewport.clientWidth + gap) / step));
+    pages = Math.max(1, Math.ceil(n / perView));
+    if (cur > pages - 1) cur = pages - 1;
+  }
+
+  var dots = [];
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    var out = [];
+    for (var i = 0; i < pages; i++) {
+      (function (idx) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'ann-dot'; b.setAttribute('role', 'tab');
+        b.setAttribute('aria-label', 'صفحهٔ ' + faDigits(idx + 1) + ' از ' + faDigits(pages));
+        b.addEventListener('click', function () { show(idx); restart(); });
+        dotsWrap.appendChild(b);
+        out.push(b);
+      })(i);
+    }
+    return out;
+  }
+
+  function show(i) {
+    cur = ((i % pages) + pages) % pages;
+    ANN_SLIDER_PAGE = cur;
+    /* چیدمان راست‌به‌چپ: کارت‌های بعدی سمت چپِ خارج از قاب قرار دارند؛
+       جابه‌جایی مثبت محور X، ردیف را به راست می‌برد و آن‌ها را وارد قاب می‌کند */
+    track.style.transform = 'translateX(' + (cur * perView * step) + 'px)';
+    for (var k = 0; k < dots.length; k++) dots[k].setAttribute('aria-selected', k === cur ? 'true' : 'false');
+  }
+
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function overlayOpen() {
+    return document.body.classList.contains('annpage-open') || document.body.classList.contains('menu-open');
+  }
+  function start() {
+    stop();
+    if (reduce || paused || offscreen || document.hidden || pages < 2) return;
+    timer = setInterval(function () {
+      if (!overlayOpen()) show(cur + 1); // زیر صفحهٔ کامل اخبار/گالری یا منوی باز نمی‌چرخد
+    }, INTERVAL);
+  }
+  function restart() { start(); }
+
+  on(nextBtn, 'click', function () { show(cur + 1); restart(); });
+  on(prevBtn, 'click', function () { show(cur - 1); restart(); });
+
+  /* توقف چرخش هنگام نگه‌داشتن ماوس یا فوکوس کیبورد */
+  on(slider, 'mouseenter', function () { paused = true; stop(); });
+  on(slider, 'mouseleave', function () { paused = false; start(); });
+  on(slider, 'focusin', function () { paused = true; stop(); });
+  on(slider, 'focusout', function () { paused = false; start(); });
+
+  /* کشیدن انگشت (موبایل): کشیدن به چپ = بعدی (همانند بنر؛ چیدمان راست‌به‌چپ) */
+  var sx = 0, sy = 0, tracking = false;
+  on(track, 'touchstart', function (e) {
+    if (e.touches.length !== 1) { tracking = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking = true; stop();
+  }, { passive: true });
+  on(track, 'touchend', function (e) {
+    if (!tracking) { start(); return; }
+    tracking = false;
+    var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) show(dx < 0 ? cur + 1 : cur - 1);
+    start();
+  }, { passive: true });
+  on(track, 'touchcancel', function () { tracking = false; start(); }, { passive: true });
+
+  /* کیبورد: فلش چپ = صفحهٔ بعد، فلش راست = صفحهٔ قبل (وقتی فوکوس داخل اسلایدر است) */
+  on(slider, 'keydown', function (e) {
+    if (e.key === 'ArrowLeft') { show(cur + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { show(cur - 1); e.preventDefault(); }
+  });
+
+  /* توقف وقتی تب پنهان است یا اسلایدر از دید خارج شده */
+  on(document, 'visibilitychange', start);
+  var io = null;
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(function (en) { offscreen = !en[0].isIntersecting; start(); }, { threshold: 0.15 });
+    io.observe(slider);
+  }
+
+  measure();
+  dots = buildDots();
+  var onePage = pages < 2; // همهٔ کارت‌ها یکجا دیده می‌شوند: فلش و نقطه لازم نیست
+  prevBtn.style.display = onePage ? 'none' : '';
+  nextBtn.style.display = onePage ? 'none' : '';
+  dotsWrap.style.display = onePage ? 'none' : '';
+
+  /* بدون انیمیشن به صفحهٔ ذخیره‌شده برویم (بازسازی پس از تغییر اندازه/ذخیرهٔ مدیر) */
+  track.style.transition = 'none';
+  show(ANN_SLIDER_PAGE);
+  void track.offsetHeight; /* اجبار به اعمال فوری استایل */
+  track.style.transition = '';
+  start();
+  return {
+    destroy: function () { // پاک‌سازی کامل برای ساخت دوبارهٔ اسلایدر
+      stop();
+      offs.forEach(function (o) { o[0].removeEventListener(o[1], o[2], o[3]); });
+      if (io) io.disconnect();
+    }
+  };
+}
+
+function annSliderResizeFn() {
+  if (ANN_SLIDER) { ANN_SLIDER.destroy(); ANN_SLIDER = null; }
+  ANN_SLIDER = annSliderCreate();
+}
+window.annSliderResize = annSliderResizeFn; // renderAnnouncements پس از هر تغییر اخبار این را صدا می‌زند
+
+/* تغییر اندازهٔ صفحه: اندازه‌گیری و صفحه‌بندی دوباره (با تأخیر کوتاه) */
+var annSliderResizeT = null;
+window.addEventListener('resize', function () {
+  clearTimeout(annSliderResizeT);
+  annSliderResizeT = setTimeout(annSliderResizeFn, 200);
+});
+
+annSliderResizeFn();
 </script>
 
 <!-- ============================================================
