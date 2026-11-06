@@ -370,6 +370,13 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(4
   .ann-slider .ann-list{gap:16px}
   .ann-slider .ann-card{flex-basis:100%} /* موبایل: ۱ کارت */
 }
+/* اسلایدر دبیران و کادر مدرسه: همان سازوکار اسلایدر اخبار (کلاس ann-slider) روی کارت‌های باریک‌تر؛
+   دسکتاپ ۴ کارت در هر نما، تبلت بزرگ ۳، تبلت کوچک ۲ و موبایل ۱ کارت */
+.tea-slider .teacher-card{flex:0 0 calc((100% - 66px)/4);min-width:0}
+@media (max-width:1080px){.tea-slider .teacher-card{flex-basis:calc((100% - 44px)/3)}}
+@media (max-width:860px){.tea-slider .teacher-card{flex-basis:calc((100% - 22px)/2)}}
+@media (max-width:700px){.tea-slider .teacher-card{flex-basis:calc((100% - 16px)/2)}} /* فاصلهٔ ۱۶px موبایل */
+@media (max-width:560px){.tea-slider .teacher-card{flex-basis:100%}}
 /* فلش‌ها («قبلی» راست، «بعدی» چپ — هم‌جهت با بنر صفحهٔ اول) */
 .ann-arrow{
   position:absolute;top:50%;transform:translateY(-50%);z-index:5;
@@ -1495,10 +1502,10 @@ section.hero{scroll-margin-top:0}
           <div class="ann-list ann-track" id="annList"></div>
         </div>
         <button type="button" class="ann-arrow ann-prev" id="annPrev" aria-label="اخبار قبلی">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
         </button>
         <button type="button" class="ann-arrow ann-next" id="annNext" aria-label="اخبار بعدی">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>
         </button>
         <div class="ann-dots" id="annDots" role="tablist" aria-label="صفحه‌های اخبار"></div>
       </div>
@@ -1547,7 +1554,19 @@ section.hero{scroll-margin-top:0}
     <div class="container">
       <div class="section-head reveal">
         <h2>دبیران و کادر مدرسه</h2>      </div>
-      <div class="teachers-grid" id="teachersGrid"></div>
+      <!-- اسلایدر دبیران و کادر مدرسه: همان اسلایدر اخبار (چند کارت در هر نما + فلش + نقطه + چرخش خودکار) -->
+      <div class="ann-slider tea-slider" id="teaSlider">
+        <div class="ann-viewport" id="teaViewport">
+          <div class="ann-list teachers-grid" id="teachersGrid"></div>
+        </div>
+        <button type="button" class="ann-arrow ann-prev" id="teaPrev" aria-label="دبیران قبلی">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <button type="button" class="ann-arrow ann-next" id="teaNext" aria-label="دبیران بعدی">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>
+        </button>
+        <div class="ann-dots" id="teaDots" role="tablist" aria-label="صفحه‌های دبیران"></div>
+      </div>
     </div>
   </section>
 
@@ -2848,6 +2867,7 @@ function renderTeachers() {
       '</article>'
     );
   }).join('');
+  if (window.teaSliderResize) window.teaSliderResize(); // بازسازی اسلایدر دبیران (مثل اسلایدر اخبار)
 }
 
 
@@ -5530,26 +5550,26 @@ heroRefresh();
 </script>
 
 <script type="text/plain" data-app>
-/* اسلایدر اخبار صفحهٔ اصلی: ۳ کارت در هر نما (دسکتاپ)، ۲ (تبلت) و ۱ (موبایل)؛
-   فلش‌ها، نقطه‌ها، چرخش خودکار، کشیدن انگشت و کیبورد — هم‌سبک بنر صفحهٔ اول.
-   جدیدترین خبر همیشه در صفحهٔ اول اسلایدر است (مرتب‌سازی تاریخ در renderAnnouncements).
-   پس از هر تغییر اخبار (ذخیرهٔ مدیر یا همگام‌سازی زنده) renderAnnouncements اجرا می‌شود
-   و با فراخوانی annSliderResize اسلایدر از نو ساخته می‌شود. */
-var ANN_SLIDER = null;
-var ANN_SLIDER_PAGE = 0; // صفحهٔ فعال اسلایدر؛ هنگام بازسازی (تغییر اندازه/ذخیرهٔ مدیر) حفظ می‌شود
+/* اسلایدرهای کارتی صفحهٔ اصلی — اخبار و دبیران: چند کارت در هر نما + فلش + نقطه؛
+   چرخش خودکار، کشیدن انگشت و کیبورد — هم‌سبک بنر صفحهٔ اول.
+   سازوکار مشترک در createCardSlider ساخته می‌شود و هر بخش (اخبار/دبیران) با
+   شناسه‌های خودش آن را فرامی‌خواند. پس از هر تغییر داده (ذخیرهٔ مدیر یا همگام‌سازی زنده)
+   renderAnnouncements / renderTeachers اجرا می‌شود و با annSliderResize /
+   teaSliderResize اسلایدر مربوط از نو ساخته می‌شود. */
 
-function annSliderCreate() {
-  var slider = document.getElementById('annSlider');
-  var track = document.getElementById('annList');
+/* کارخانهٔ اسلایدر کارتی — opt: {slider, track, viewport, dots, prev, next, cardSel, getPage, setPage} */
+function createCardSlider(opt) {
+  var slider = document.getElementById(opt.slider);
+  var track = document.getElementById(opt.track);
   if (!slider || !track) return null;
-  var viewport = document.getElementById('annViewport');
-  var dotsWrap = document.getElementById('annDots');
-  var prevBtn = document.getElementById('annPrev');
-  var nextBtn = document.getElementById('annNext');
-  var cards = Array.prototype.slice.call(track.querySelectorAll('.ann-card'));
+  var viewport = document.getElementById(opt.viewport);
+  var dotsWrap = document.getElementById(opt.dots);
+  var prevBtn = document.getElementById(opt.prev);
+  var nextBtn = document.getElementById(opt.next);
+  var cards = Array.prototype.slice.call(track.querySelectorAll(opt.cardSel));
   var n = cards.length;
 
-  if (!n) { // خبری نیست: فلش‌ها و نقطه‌ها لازم نیستند
+  if (!n) { // کارتی نیست: فلش‌ها و نقطه‌ها لازم نیستند
     prevBtn.style.display = 'none';
     nextBtn.style.display = 'none';
     dotsWrap.style.display = 'none';
@@ -5594,7 +5614,7 @@ function annSliderCreate() {
 
   function show(i) {
     cur = ((i % pages) + pages) % pages;
-    ANN_SLIDER_PAGE = cur;
+    opt.setPage(cur);
     /* چیدمان راست‌به‌چپ: کارت‌های بعدی سمت چپِ خارج از قاب قرار دارند؛
        جابه‌جایی مثبت محور X، ردیف را به راست می‌برد و آن‌ها را وارد قاب می‌کند */
     track.style.transform = 'translateX(' + (cur * perView * step) + 'px)';
@@ -5661,7 +5681,7 @@ function annSliderCreate() {
 
   /* بدون انیمیشن به صفحهٔ ذخیره‌شده برویم (بازسازی پس از تغییر اندازه/ذخیرهٔ مدیر) */
   track.style.transition = 'none';
-  show(ANN_SLIDER_PAGE);
+  show(opt.getPage());
   void track.offsetHeight; /* اجبار به اعمال فوری استایل */
   track.style.transition = '';
   start();
@@ -5674,20 +5694,59 @@ function annSliderCreate() {
   };
 }
 
+/* ---------- اسلایدر اخبار: ۳ کارت در هر نما (دسکتاپ)، ۲ (تبلت) و ۱ (موبایل) ----------
+   جدیدترین خبر همیشه در صفحهٔ اول اسلایدر است (مرتب‌سازی تاریخ در renderAnnouncements). */
+var ANN_SLIDER = null;
+var ANN_SLIDER_PAGE = 0; // صفحهٔ فعال اسلایدر؛ هنگام بازسازی (تغییر اندازه/ذخیرهٔ مدیر) حفظ می‌شود
+
+function annSliderCreate() {
+  return createCardSlider({
+    slider: 'annSlider', track: 'annList', viewport: 'annViewport',
+    dots: 'annDots', prev: 'annPrev', next: 'annNext',
+    cardSel: '.ann-card',
+    getPage: function () { return ANN_SLIDER_PAGE; },
+    setPage: function (p) { ANN_SLIDER_PAGE = p; }
+  });
+}
+
 function annSliderResizeFn() {
   if (ANN_SLIDER) { ANN_SLIDER.destroy(); ANN_SLIDER = null; }
   ANN_SLIDER = annSliderCreate();
 }
 window.annSliderResize = annSliderResizeFn; // renderAnnouncements پس از هر تغییر اخبار این را صدا می‌زند
 
-/* تغییر اندازهٔ صفحه: اندازه‌گیری و صفحه‌بندی دوباره (با تأخیر کوتاه) */
+/* ---------- اسلایدر دبیران و کادر مدرسه: همان اسلایدر اخبار روی کارت‌های دبیران ---------- */
+var TEA_SLIDER = null;
+var TEA_SLIDER_PAGE = 0; // صفحهٔ فعال اسلایدر دبیران؛ هنگام بازسازی حفظ می‌شود
+
+function teaSliderCreate() {
+  return createCardSlider({
+    slider: 'teaSlider', track: 'teachersGrid', viewport: 'teaViewport',
+    dots: 'teaDots', prev: 'teaPrev', next: 'teaNext',
+    cardSel: '.teacher-card',
+    getPage: function () { return TEA_SLIDER_PAGE; },
+    setPage: function (p) { TEA_SLIDER_PAGE = p; }
+  });
+}
+
+function teaSliderResizeFn() {
+  if (TEA_SLIDER) { TEA_SLIDER.destroy(); TEA_SLIDER = null; }
+  TEA_SLIDER = teaSliderCreate();
+}
+window.teaSliderResize = teaSliderResizeFn; // renderTeachers پس از هر تغییر دبیران این را صدا می‌زند
+
+/* تغییر اندازهٔ صفحه: اندازه‌گیری و صفحه‌بندی دوبارهٔ هر دو اسلایدر (با تأخیر کوتاه) */
 var annSliderResizeT = null;
+var teaSliderResizeT = null;
 window.addEventListener('resize', function () {
   clearTimeout(annSliderResizeT);
+  clearTimeout(teaSliderResizeT);
   annSliderResizeT = setTimeout(annSliderResizeFn, 200);
+  teaSliderResizeT = setTimeout(teaSliderResizeFn, 200);
 });
 
 annSliderResizeFn();
+teaSliderResizeFn();
 </script>
 
 <!-- ============================================================
