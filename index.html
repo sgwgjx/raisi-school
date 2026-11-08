@@ -397,7 +397,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(4
   .ann-next{left:-4px}
 }
 /* نقطه‌های صفحه‌بندی (زیر اسلایدر؛ نقطهٔ فعال کش می‌آید) */
-.ann-dots{display:flex;justify-content:center;gap:2px;margin-top:14px}
+.ann-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:14px}
 .ann-dot{width:26px;height:26px;padding:0;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;border-radius:8px}
 .ann-dot::after{content:'';width:9px;height:9px;border-radius:9px;background:var(--border);transition:width .3s,background .3s}
 .ann-dot[aria-selected="true"]::after{width:28px;background:var(--btn-grad)}
@@ -5566,7 +5566,7 @@ function createCardSlider(opt) {
   var dotsWrap = document.getElementById(opt.dots);
   var prevBtn = document.getElementById(opt.prev);
   var nextBtn = document.getElementById(opt.next);
-  var cards = Array.prototype.slice.call(track.querySelectorAll(opt.cardSel));
+  var cards = Array.prototype.slice.call(track.querySelectorAll(opt.cardSel)); // ترتیب اصلی
   var n = cards.length;
 
   if (!n) { // کارتی نیست: فلش‌ها و نقطه‌ها لازم نیستند
@@ -5577,48 +5577,93 @@ function createCardSlider(opt) {
     return { destroy: function () {} };
   }
 
-  var INTERVAL = 5500, cur = 0, timer = null, paused = false, offscreen = false;
-  var step = 0, perView = 1, pages = 1;
+  /* حرکت «یکی‌یکی»: در هر گام فقط یک کارت از سمت راست خارج می‌شود و یک کارت از سمت چپ وارد می‌شود
+     (چرخش بی‌پایان: کارتِ خارج‌شده به انتهای صف می‌رود). cur = شمارهٔ کارتی که الان در راست‌ترین جایگاه است. */
+  var INTERVAL = 3500, DUR = 550, timer = null, paused = false, offscreen = false;
+  var step = 0, perView = 1, cur = 0, busy = false, busyT = null;
+  var order = cards.slice(); // ترتیب فعلی کارت‌ها در DOM
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var faDigits = function (x) { return String(x).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
   var offs = []; // شنونده‌ها برای پاک‌سازی هنگام بازسازی
-  function on(el, ev, fn, opt) { el.addEventListener(ev, fn, opt); offs.push([el, ev, fn, opt]); }
+  function on(el, ev, fn, o) { el.addEventListener(ev, fn, o); offs.push([el, ev, fn, o]); }
 
-  /* اندازه‌گیری از چیدمان واقعی: عرض کارت + فاصله → تعداد کارت در هر نما و تعداد صفحه‌ها */
+  /* اندازه‌گیری از چیدمان واقعی: عرض کارت + فاصله → اندازهٔ هر گام و تعداد کارت‌های دیده‌شده */
   function measure() {
     var gap = parseFloat(getComputedStyle(track).columnGap) || 22;
     var w = cards[0].getBoundingClientRect().width;
     if (!w) return;
     step = w + gap;
     perView = Math.max(1, Math.round((viewport.clientWidth + gap) / step));
-    pages = Math.max(1, Math.ceil(n / perView));
-    if (cur > pages - 1) cur = pages - 1;
+  }
+
+  function applyOrder(arr) { // چیدن کارت‌ها در DOM به ترتیب داده‌شده
+    order = arr;
+    for (var i = 0; i < arr.length; i++) track.appendChild(arr[i]);
+  }
+  function noAnim(fn) {
+    track.style.transition = 'none';
+    fn();
+    void track.offsetHeight; /* اجبار به اعمال فوری استایل */
+    track.style.transition = '';
   }
 
   var dots = [];
   function buildDots() {
     dotsWrap.innerHTML = '';
     var out = [];
-    for (var i = 0; i < pages; i++) {
+    for (var i = 0; i < n; i++) {
       (function (idx) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'ann-dot'; b.setAttribute('role', 'tab');
-        b.setAttribute('aria-label', 'صفحهٔ ' + faDigits(idx + 1) + ' از ' + faDigits(pages));
-        b.addEventListener('click', function () { show(idx); restart(); });
+        b.setAttribute('aria-label', 'مورد ' + faDigits(idx + 1) + ' از ' + faDigits(n));
+        b.addEventListener('click', function () { jumpTo(idx); restart(); });
         dotsWrap.appendChild(b);
         out.push(b);
       })(i);
     }
     return out;
   }
-
-  function show(i) {
-    cur = ((i % pages) + pages) % pages;
-    opt.setPage(cur);
-    /* چیدمان راست‌به‌چپ: کارت‌های بعدی سمت چپِ خارج از قاب قرار دارند؛
-       جابه‌جایی مثبت محور X، ردیف را به راست می‌برد و آن‌ها را وارد قاب می‌کند */
-    track.style.transform = 'translateX(' + (cur * perView * step) + 'px)';
+  function markDots() {
     for (var k = 0; k < dots.length; k++) dots[k].setAttribute('aria-selected', k === cur ? 'true' : 'false');
+  }
+
+  function finish() { busy = false; busyT = null; }
+
+  /* dir = +1 (بعدی): راست‌ترین کارت بیرون می‌رود، کارت تازه از چپ می‌آید
+     dir = -1 (قبلی): برعکس */
+  function move(dir) {
+    if (n <= perView || busy || !step) return;
+    busy = true;
+    if (dir > 0) {
+      track.style.transform = 'translateX(' + step + 'px)'; // کل ردیف یک کارت به راست می‌رود
+      busyT = setTimeout(function () {
+        var first = order.shift(); order.push(first);
+        noAnim(function () { track.appendChild(first); track.style.transform = ''; });
+        finish();
+      }, reduce ? 0 : DUR + 30);
+      cur = (cur + 1) % n;
+    } else {
+      var last = order.pop(); order.unshift(last);
+      noAnim(function () {
+        track.insertBefore(last, order[1]);
+        track.style.transform = 'translateX(' + step + 'px)'; // کارت تازه بیرونِ قاب، سمت راست
+      });
+      track.style.transform = 'translateX(0px)';
+      busyT = setTimeout(function () { track.style.transform = ''; finish(); }, reduce ? 0 : DUR + 30);
+      cur = (cur - 1 + n) % n;
+    }
+    opt.setPage(cur);
+    markDots();
+  }
+
+  function jumpTo(idx) { // نقطه‌ها: پرش مستقیم به یک کارت
+    if (n <= perView || idx === cur) return;
+    if (busyT) { clearTimeout(busyT); finish(); }
+    noAnim(function () {
+      track.style.transform = '';
+      applyOrder(cards.slice(idx).concat(cards.slice(0, idx)));
+    });
+    cur = idx; opt.setPage(cur); markDots();
   }
 
   function stop() { if (timer) { clearInterval(timer); timer = null; } }
@@ -5627,15 +5672,15 @@ function createCardSlider(opt) {
   }
   function start() {
     stop();
-    if (reduce || paused || offscreen || document.hidden || pages < 2) return;
+    if (reduce || paused || offscreen || document.hidden || n <= perView) return;
     timer = setInterval(function () {
-      if (!overlayOpen()) show(cur + 1); // زیر صفحهٔ کامل اخبار/گالری یا منوی باز نمی‌چرخد
+      if (!overlayOpen()) move(1); // زیر صفحهٔ کامل اخبار/گالری یا منوی باز نمی‌چرخد
     }, INTERVAL);
   }
   function restart() { start(); }
 
-  on(nextBtn, 'click', function () { show(cur + 1); restart(); });
-  on(prevBtn, 'click', function () { show(cur - 1); restart(); });
+  on(nextBtn, 'click', function () { move(1); restart(); });
+  on(prevBtn, 'click', function () { move(-1); restart(); });
 
   /* توقف چرخش هنگام نگه‌داشتن ماوس یا فوکوس کیبورد */
   on(slider, 'mouseenter', function () { paused = true; stop(); });
@@ -5643,7 +5688,7 @@ function createCardSlider(opt) {
   on(slider, 'focusin', function () { paused = true; stop(); });
   on(slider, 'focusout', function () { paused = false; start(); });
 
-  /* کشیدن انگشت (موبایل): کشیدن به چپ = بعدی (همانند بنر؛ چیدمان راست‌به‌چپ) */
+  /* کشیدن انگشت (موبایل): کشیدن به چپ = بعدی */
   var sx = 0, sy = 0, tracking = false;
   on(track, 'touchstart', function (e) {
     if (e.touches.length !== 1) { tracking = false; return; }
@@ -5653,15 +5698,15 @@ function createCardSlider(opt) {
     if (!tracking) { start(); return; }
     tracking = false;
     var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) show(dx < 0 ? cur + 1 : cur - 1);
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) move(dx < 0 ? 1 : -1);
     start();
   }, { passive: true });
   on(track, 'touchcancel', function () { tracking = false; start(); }, { passive: true });
 
-  /* کیبورد: فلش چپ = صفحهٔ بعد، فلش راست = صفحهٔ قبل (وقتی فوکوس داخل اسلایدر است) */
+  /* کیبورد: فلش چپ = بعدی، فلش راست = قبلی (وقتی فوکوس داخل اسلایدر است) */
   on(slider, 'keydown', function (e) {
-    if (e.key === 'ArrowLeft') { show(cur + 1); e.preventDefault(); }
-    else if (e.key === 'ArrowRight') { show(cur - 1); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { move(1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { move(-1); e.preventDefault(); }
   });
 
   /* توقف وقتی تب پنهان است یا اسلایدر از دید خارج شده */
@@ -5674,22 +5719,26 @@ function createCardSlider(opt) {
 
   measure();
   dots = buildDots();
-  var onePage = pages < 2; // همهٔ کارت‌ها یکجا دیده می‌شوند: فلش و نقطه لازم نیست
-  prevBtn.style.display = onePage ? 'none' : '';
-  nextBtn.style.display = onePage ? 'none' : '';
-  dotsWrap.style.display = onePage ? 'none' : '';
+  var fits = n <= perView; // همهٔ کارت‌ها یکجا دیده می‌شوند: فلش و نقطه لازم نیست
+  prevBtn.style.display = fits ? 'none' : '';
+  nextBtn.style.display = fits ? 'none' : '';
+  dotsWrap.style.display = fits ? 'none' : '';
 
-  /* بدون انیمیشن به صفحهٔ ذخیره‌شده برویم (بازسازی پس از تغییر اندازه/ذخیرهٔ مدیر) */
-  track.style.transition = 'none';
-  show(opt.getPage());
-  void track.offsetHeight; /* اجبار به اعمال فوری استایل */
-  track.style.transition = '';
+  /* بازگرداندن موقعیت ذخیره‌شده (بازسازی پس از تغییر اندازه/ذخیرهٔ مدیر) بدون انیمیشن */
+  cur = fits ? 0 : Math.min(Math.max(0, opt.getPage() | 0), n - 1);
+  noAnim(function () {
+    track.style.transform = '';
+    applyOrder(cards.slice(cur).concat(cards.slice(0, cur)));
+  });
+  markDots();
   start();
   return {
     destroy: function () { // پاک‌سازی کامل برای ساخت دوبارهٔ اسلایدر
       stop();
+      if (busyT) clearTimeout(busyT);
       offs.forEach(function (o) { o[0].removeEventListener(o[1], o[2], o[3]); });
       if (io) io.disconnect();
+      noAnim(function () { track.style.transform = ''; applyOrder(cards.slice()); }); // ترتیب اصلی
     }
   };
 }
