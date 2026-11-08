@@ -405,6 +405,9 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(4
 @media (prefers-reduced-motion:reduce){
   .ann-slider .ann-list{transition:none}
 }
+/* حالت «مشاهده همه» دبیران: شبکهٔ کامل بدون اسلاید */
+.tea-slider.tea-expanded .ann-list{flex-wrap:wrap;transform:none !important;row-gap:22px}
+.tea-slider.tea-expanded .ann-arrow,.tea-slider.tea-expanded .ann-dots{display:none !important}
 
 /* کلیک روی کارت اطلاعیه → صفحهٔ اختصاصی همان اطلاعیه */
 .ann-card{cursor:pointer}
@@ -421,23 +424,85 @@ body.annpage-open{overflow:hidden}
 .annpage-close:hover{background:var(--chip);color:var(--accent-strong)}
 .annpage-close .ic{width:1.25em;height:1.25em}
 .annpage-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain}
-/* تصویر جمع‌وجور (نه تمام‌صفحه): حداکثر ۲۴۰px ارتفاع، بدون برش، وسط ستون */
-.annpage-hero{display:flex;align-items:center;justify-content:center;max-width:780px;width:100%;margin:0 auto;padding:0 22px}
-.annpage-hero img{max-width:100%;max-height:240px;width:auto;height:auto;object-fit:contain;display:block;border-radius:14px;box-shadow:0 10px 26px rgba(9,30,66,.14)}
-/* تصویر اطلاعیه قابل‌کلیک → نمایش بزرگ با زوم (Task 46) */
-.annpage-imgbtn{position:relative;display:flex;padding:0;margin:0;border:0;background:transparent;cursor:zoom-in;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;border-radius:14px}
-.annpage-imgbtn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+/* ---------- صفحهٔ خبر (مقاله‌وار): نوار بالا با پیشرفت مطالعه، کاور بزرگ، کارت مقاله، اخبار دیگر ---------- */
+.annpage-bar{flex:none;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 4px 16px rgba(9,30,66,.06);position:relative;z-index:2}
+.annpage-bar-in{max-width:880px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:12px}
+.annpage-bar-title{flex:1;text-align:center;font-weight:800;color:var(--primary);font-size:.95rem}
+.annpage-pill{
+  display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:999px;cursor:pointer;
+  background:var(--chip);color:var(--primary);border:1.5px solid transparent;font:inherit;font-weight:700;font-size:.86rem;
+  transition:background .2s,color .2s,transform .2s;
+}
+.annpage-pill:hover{background:var(--btn-grad);color:#fff}
+.annpage-pill:active{transform:scale(.96)}
+.annpage-pill:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.annpage-pill .ic,.annpage-pill svg{width:1.2em;height:1.2em;flex:none}
+.annpage-prog{height:3px;background:transparent}
+.annpage-prog span{display:block;height:100%;width:0;background:var(--btn-grad);transition:width .12s linear}
+.annpage-wrap{max-width:880px;margin:0 auto;padding:22px 18px 56px}
+.annpage-wrap.is-in .annpage-cover,.annpage-wrap.is-in .annpage-article,.annpage-wrap.is-in .annpage-more{animation:annRise .55s cubic-bezier(.22,.9,.35,1) both}
+.annpage-wrap.is-in .annpage-article{animation-delay:.08s}
+.annpage-wrap.is-in .annpage-more{animation-delay:.16s}
+@keyframes annRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.annpage-wrap.is-in .annpage-cover,.annpage-wrap.is-in .annpage-article,.annpage-wrap.is-in .annpage-more{animation:none}}
+.annpage-cover{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:16/9;max-height:460px;width:100%;background:var(--surface-2);box-shadow:0 18px 44px rgba(9,30,66,.20)}
+.annpage-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(26px) saturate(1.25);transform:scale(1.08);opacity:.85}
+.annpage-imgbtn{position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;border:0;background:transparent;cursor:zoom-in;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.annpage-imgbtn:focus-visible{outline:3px solid var(--accent);outline-offset:-6px;border-radius:22px}
+.annpage-imgbtn img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
 .zoom-hint{position:absolute;top:10px;inset-inline-end:10px;width:34px;height:34px;border-radius:50%;background:rgba(8,16,30,.55);border:1.5px solid rgba(255,255,255,.5);display:grid;place-items:center;color:#fff;pointer-events:none}
 .zoom-hint .ic{width:1.05em;height:1.05em}
-.annpage-content{max-width:780px;margin:0 auto;padding:14px 22px 48px;width:100%}
-.annpage-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.annpage-date{display:inline-flex;align-items:center;gap:6px;color:var(--text-light);font-size:.8rem}
-.annpage-date .ic{width:1em;height:1em}
-.annpage-content h2{color:var(--primary);font-size:1.35rem;font-weight:800;line-height:1.9;margin:0 0 14px}
-.annpage-text{color:var(--text);font-size:.95rem;line-height:2.15;white-space:pre-line;border-top:1px dashed var(--border);padding-top:18px}
+.annpage-article{
+  position:relative;z-index:1;margin:-34px 22px 0;background:var(--surface);border:1px solid var(--border);border-radius:22px;
+  box-shadow:0 14px 38px rgba(9,30,66,.12);padding:30px 34px 34px;
+}
+.annpage-article::before{content:'';position:absolute;top:0;inset-inline:34px;height:4px;border-radius:0 0 6px 6px;background:var(--btn-grad)}
+.annpage-meta{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:14px}
+.annpage-date,.annpage-read{display:inline-flex;align-items:center;gap:6px;color:var(--text-light);font-size:.8rem}
+.annpage-date .ic,.annpage-read .ic{width:1em;height:1em}
+.annpage-article h2{color:var(--primary);font-size:1.7rem;font-weight:900;line-height:1.85;margin:0 0 18px}
+.annpage-text{border-top:1px solid var(--border);padding-top:20px}
+.annpage-text p{margin:0 0 18px;color:var(--text);font-size:1rem;line-height:2.25;text-align:justify}
+.annpage-text p:last-child{margin-bottom:0}
+.annpage-text p.annpage-lead{font-size:1.1rem;font-weight:600;line-height:2.15;color:var(--primary);padding-inline-start:16px;border-inline-start:4px solid var(--accent);text-align:start}
+.annpage-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding-top:20px;border-top:1px dashed var(--border)}
+.annpage-more{margin-top:34px}
+.annpage-more h3{font-size:1.05rem;font-weight:900;color:var(--primary);margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.annpage-more h3::after{content:'';flex:1;height:1px;background:var(--border)}
+.annpage-rel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.annpage-rel{
+  display:flex;flex-direction:column;text-align:start;font:inherit;cursor:pointer;padding:0;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 18px rgba(9,30,66,.08);
+  transition:transform .25s,box-shadow .25s;
+}
+.annpage-rel:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(9,30,66,.16)}
+.annpage-rel:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.annpage-rel .rel-img{aspect-ratio:16/9;background:var(--surface-2);display:block}
+.annpage-rel .rel-img img{width:100%;height:100%;object-fit:cover;display:block}
+.annpage-rel .rel-txt{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px}
+.annpage-rel strong{color:var(--primary);font-size:.9rem;line-height:1.8;font-weight:800;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.annpage-rel small{color:var(--text-light);font-size:.74rem}
+.annpage-all{display:flex;justify-content:center;margin-top:22px}
+@media (max-width:780px){.annpage-rel-grid{grid-template-columns:1fr 1fr}.annpage-rel-grid .annpage-rel:nth-child(3){display:none}}
+@media (max-width:560px){
+  .annpage-bar-in{padding:8px 12px}
+  .annpage-pill{height:40px;padding:0 13px}
+  .annpage-pill .pill-txt{display:none}
+  .annpage-wrap{padding:14px 12px 44px}
+  .annpage-cover{border-radius:16px}
+  .annpage-article{margin:-24px 10px 0;padding:24px 18px 26px;border-radius:18px}
+  .annpage-article::before{inset-inline:18px}
+  .annpage-article h2{font-size:1.28rem}
+  .annpage-text p{font-size:.95rem;text-align:start}
+  .annpage-text p.annpage-lead{font-size:1rem}
+  .annpage-rel-grid{grid-template-columns:1fr}
+  .annpage-rel-grid .annpage-rel:nth-child(3){display:flex}
+  .annpage-rel{flex-direction:row}
+  .annpage-rel .rel-img{width:112px;aspect-ratio:auto;flex:none}
+}
 
 /* ---------- نوار عکس‌های کوچک اطلاعیهٔ چندعکسی (Task 53) ---------- */
-.annpage-thumbs{max-width:780px;width:100%;margin:12px auto 0;padding:0 22px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.annpage-thumbs{width:100%;margin:14px auto 0;padding:0 22px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .annpage-thumbs[hidden]{display:none}
 .annpage-thumbs button{border:2px solid transparent;border-radius:10px;overflow:hidden;padding:0;background:transparent;cursor:pointer;line-height:0}
 .annpage-thumbs button img{width:76px;height:56px;object-fit:cover;display:block}
@@ -462,10 +527,6 @@ body.annpage-open{overflow:hidden}
 @media(max-width:560px){
   .annpage-top{padding:10px 12px}
   .annpage-close{width:40px;height:40px}
-  .annpage-hero{padding:0 16px}
-  .annpage-hero img{max-height:170px;border-radius:12px}
-  .annpage-content{padding:14px 16px 40px}
-  .annpage-content h2{font-size:1.15rem}
   .annpage-thumbs{padding:0 16px}
   .annpage-thumbs button img{width:60px;height:44px}
 }
@@ -1368,6 +1429,34 @@ section.hero{scroll-margin-top:0}
   .footer-map-head{margin-bottom:10px}
   .footer-map-frame{height:230px;border-radius:14px}
 }
+
+/* ---------- گالری در موبایل: فشرده، دو ستونه و کم‌ارتفاع ---------- */
+@media (max-width:640px){
+  .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .gallery-item img{aspect-ratio:1/1}
+  .gallery-item figcaption{padding:8px 9px;gap:4px}
+  .gallery-item figcaption strong{
+    font-size:.78rem;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .gallery-item figcaption .g-chip{position:absolute;top:-30px;inset-inline-start:8px;
+    background:rgba(9,20,38,.75);padding:2px 8px;font-size:.64rem}
+  .gallery-more{margin-top:16px}
+  .gallery-more .btn{width:100%;padding:10px 16px}
+}
+
+/* ---------- امتحانات در موبایل: کارت‌های فشرده ---------- */
+@media (max-width:640px){
+  .exam-list{gap:8px}
+  .exam-card{padding:11px 14px}
+  .exam-top{margin-bottom:6px;gap:8px}
+  .exam-top h3{font-size:.96rem}
+  .exam-top .chip{font-size:.7rem;padding:2px 9px}
+  .exam-meta{gap:4px;font-size:.8rem}
+  .exam-meta .ic{width:1.1em;height:1.1em}
+  .exam-note{margin-top:7px;padding-top:7px;font-size:.76rem;line-height:1.7}
+  #exams .filter-bar{margin-bottom:14px;gap:8px}
+}
 </style>
 </head>
 
@@ -1567,6 +1656,10 @@ section.hero{scroll-margin-top:0}
         </button>
         <div class="ann-dots" id="teaDots" role="tablist" aria-label="صفحه‌های دبیران"></div>
       </div>
+      <!-- «مشاهده همه»: اسلایدر دبیران به شبکهٔ کامل تبدیل می‌شود و همهٔ دبیران یکجا دیده می‌شوند -->
+      <div class="gallery-more" id="teaMore" hidden>
+        <button type="button" class="btn btn-outline" id="teaMoreBtn" aria-expanded="false">مشاهده همه</button>
+      </div>
     </div>
   </section>
 
@@ -1675,26 +1768,45 @@ section.hero{scroll-margin-top:0}
 
 <!-- صفحهٔ اختصاصی اطلاعیه (کلیک روی کارت اطلاعیه → تصویر بالا + متن کامل) -->
 <div class="ann-page" id="annPage" role="dialog" aria-modal="true" aria-label="جزئیات خبر" hidden>
-  <div class="annpage-top">
-    <button type="button" class="annpage-close" id="annPageClose" title="بستن" aria-label="بستن صفحهٔ خبر">
-      <svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>
-    </button>
-  </div>
-  <div class="annpage-scroll" id="annPageScroll">
-    <div class="annpage-hero">
-      <button type="button" class="annpage-imgbtn" id="annPageImgBtn" title="نمایش بزرگ تصویر" aria-label="نمایش بزرگ تصویر خبر">
-        <img id="annPageImg" alt="" draggable="false">
-        <span class="zoom-hint" aria-hidden="true"><svg class="ic"><use href="#i-zoom"/></svg></span>
+  <div class="annpage-bar">
+    <div class="annpage-bar-in">
+      <button type="button" class="annpage-pill" id="annPageClose" title="بازگشت" aria-label="بستن صفحهٔ خبر و بازگشت">
+        <svg class="ic" aria-hidden="true"><use href="#i-chev-right"/></svg><span class="pill-txt">بازگشت</span>
+      </button>
+      <span class="annpage-bar-title">خبر مدرسه</span>
+      <button type="button" class="annpage-pill" id="annPageShare" title="اشتراک‌گذاری خبر" aria-label="اشتراک‌گذاری یا کپی خبر">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span class="pill-txt">اشتراک‌گذاری</span>
       </button>
     </div>
-    <div class="annpage-thumbs" id="annPageThumbs" hidden></div>
-    <div class="annpage-content">
-      <div class="annpage-meta">
-        <span class="chip" id="annPageAud"></span>
-        <span class="annpage-date" id="annPageDate"></span>
+    <div class="annpage-prog"><span id="annPageProg"></span></div>
+  </div>
+  <div class="annpage-scroll" id="annPageScroll">
+    <div class="annpage-wrap" id="annPageWrap">
+      <div class="annpage-cover">
+        <div class="annpage-bg" id="annPageBg" aria-hidden="true"></div>
+        <button type="button" class="annpage-imgbtn" id="annPageImgBtn" title="نمایش بزرگ تصویر" aria-label="نمایش بزرگ تصویر خبر">
+          <img id="annPageImg" alt="" draggable="false">
+          <span class="zoom-hint" aria-hidden="true"><svg class="ic"><use href="#i-zoom"/></svg></span>
+        </button>
       </div>
-      <h2 id="annPageTitle"></h2>
-      <div class="annpage-text" id="annPageText"></div>
+      <div class="annpage-thumbs" id="annPageThumbs" hidden></div>
+      <article class="annpage-article">
+        <div class="annpage-meta">
+          <span class="chip" id="annPageAud"></span>
+          <span class="annpage-date" id="annPageDateWrap"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><span id="annPageDate"></span></span>
+          <span class="annpage-read" id="annPageRead"></span>
+        </div>
+        <h2 id="annPageTitle"></h2>
+        <div class="annpage-text" id="annPageText"></div>
+        <div class="annpage-actions">
+          <button type="button" class="annpage-pill" id="annPageCopy">کپی متن خبر</button>
+          <button type="button" class="annpage-pill" id="annPageAllBtn">همهٔ اخبار</button>
+        </div>
+      </article>
+      <section class="annpage-more" id="annPageMore" hidden>
+        <h3>اخبار دیگر</h3>
+        <div class="annpage-rel-grid" id="annPageRelated"></div>
+      </section>
     </div>
   </div>
 </div>
@@ -2635,7 +2747,7 @@ function updateAnnMore() {
   if (!box) return;
   // اسلایدر همهٔ خبرها را صفحه‌بندی می‌کند؛ دکمهٔ «مشاهده همه» (فهرست کامل + جستجو) فقط وقتی کاربرد دارد
   // که خبر بیشتر از یک نمای اسلایدر (۳ کارت در دسکتاپ) وجود داشته باشد
-  if (!total || total <= 3) { box.hidden = true; return; }
+  if (!total) { box.hidden = true; return; } // با حداقل یک خبر، دکمهٔ «مشاهده همه» همیشه هست
   box.hidden = false;
 }
 
@@ -2705,7 +2817,7 @@ function renderAnnouncements() {
       '<p>خبری برای نمایش وجود ندارد.</p></div>';
     var box0 = document.getElementById('annMore');
     if (box0) box0.hidden = true;
-    if (window.annSliderResize) window.annSliderResize(); // اسلایدر خالی و بدون فلش/نقطه شود
+    if (window.annSliderResize) window.annSliderResize(true); // اسلایدر خالی و بدون فلش/نقطه شود
     return;
   }
   // همهٔ خبرها داخل اسلایدر قرار می‌گیرند؛ اسلایدر آن‌ها را صفحه‌به‌صفحه (۳ کارت در هر نما) نشان می‌دهد
@@ -2713,7 +2825,7 @@ function renderAnnouncements() {
   for (var i = 0; i < items.length; i++) html += annItemHtml(items[i], i);
   list.innerHTML = html;
   updateAnnMore();
-  if (window.annSliderResize) window.annSliderResize(); // بازسازی صفحه‌بندی، نقطه‌ها و چرخش خودکار
+  if (window.annSliderResize) window.annSliderResize(true); // بازسازی؛ جدیدترین خبر دوباره اول (راست‌ترین) می‌آید
 }
 
 /* ---------- صفحهٔ اختصاصی اطلاعیه (کلیک روی کارت → تصویر بالا + متن کامل) ---------- */
@@ -2728,11 +2840,21 @@ function annPhotos(a) {
   }
   return [annCardSrc(a)];
 }
+var annPageSorted = []; // همهٔ خبرها (جدیدترین اول) برای بخش «اخبار دیگر»
+var annPageCur = null;  // خبر باز‌شده
+function annReadMins(text) {
+  var w = String(text || '').trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(w / 170));
+}
 function openAnnPage(a) {
   if (!a) return;
+  annPageCur = a;
+  annPageSorted = ANNOUNCEMENTS.slice();
+  sortAnnouncements(annPageSorted);
   annPagePhotoList = annPhotos(a);
   annPagePhotoIdx = 0;
   document.getElementById('annPageImg').src = annPagePhotoList[0];
+  document.getElementById('annPageBg').style.backgroundImage = 'url("' + annPagePhotoList[0] + '")';
   var tb = document.getElementById('annPageThumbs');
   if (annPagePhotoList.length > 1) { // اطلاعیهٔ چندعکسی: نوار عکس‌های کوچک زیر تصویر اصلی
     tb.hidden = false;
@@ -2743,13 +2865,56 @@ function openAnnPage(a) {
   } else { tb.hidden = true; tb.innerHTML = ''; }
   document.getElementById('annPageAud').textContent = audLabel(a.aud);
   document.getElementById('annPageDate').textContent = a.date || '';
+  document.getElementById('annPageDateWrap').style.display = a.date ? '' : 'none';
+  document.getElementById('annPageRead').textContent = toFa(annReadMins(a.text)) + ' دقیقه مطالعه';
   document.getElementById('annPageTitle').textContent = a.title;
-  document.getElementById('annPageText').innerHTML = escHTML(a.text); // white-space:pre-line شکست خط‌های متن را حفظ می‌کند
+  // متن: پاراگراف‌بندی؛ پاراگراف اول (یا تنها پاراگراف) به‌صورت «لید» برجسته
+  var paras = String(a.text || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+  document.getElementById('annPageText').innerHTML = paras.map(function (t, i) {
+    return '<p' + (i === 0 ? ' class="annpage-lead"' : '') + '>' + escHTML(t) + '</p>';
+  }).join('');
+  // اخبار دیگر: سه خبرِ بعدی در فهرست (با چرخش به ابتدای فهرست)
+  var idx = annPageSorted.indexOf(a);
+  if (idx < 0) {
+    for (var q = 0; q < annPageSorted.length; q++) {
+      if (annPageSorted[q].title === a.title && annPageSorted[q].date === a.date) { idx = q; break; }
+    }
+  }
+  var rel = '', cnt = 0, total = annPageSorted.length;
+  for (var k = 1; k < total && cnt < 3; k++) {
+    var ri = ((idx < 0 ? -1 : idx) + k + total) % total;
+    if (ri === idx) continue;
+    var r = annPageSorted[ri];
+    rel += '<button type="button" class="annpage-rel" data-goto="' + ri + '">' +
+      '<span class="rel-img"><img src="' + annCardSrc(r) + '" alt="" loading="lazy"></span>' +
+      '<span class="rel-txt"><strong>' + escHTML(r.title) + '</strong><small>' + escHTML(r.date || '') + '</small></span></button>';
+    cnt++;
+  }
+  document.getElementById('annPageRelated').innerHTML = rel;
+  document.getElementById('annPageMore').hidden = !cnt;
   var pg = document.getElementById('annPage');
   pg.hidden = false;
-  document.getElementById('annPageScroll').scrollTop = 0;
+  var sc = document.getElementById('annPageScroll');
+  sc.scrollTop = 0;
+  document.getElementById('annPageProg').style.width = '0';
+  var wrap = document.getElementById('annPageWrap'); // انیمیشن ورود با هر خبر تازه
+  wrap.classList.remove('is-in'); void wrap.offsetWidth; wrap.classList.add('is-in');
   document.body.classList.add('annpage-open'); // قفل اسکرول صفحهٔ پشت
   document.getElementById('annPageClose').focus();
+}
+function annPageShare(copyOnly) {
+  var a = annPageCur;
+  if (!a) return;
+  if (!copyOnly && navigator.share) {
+    navigator.share({ title: a.title, text: a.text, url: location.href.split('#')[0] }).catch(function () {});
+    return;
+  }
+  var txt = a.title + '\n\n' + a.text;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(
+      function () { showToast('متن خبر کپی شد.'); },
+      function () { showToast('کپی انجام نشد.'); });
+  } else { showToast('کپی در این مرورگر پشتیبانی نمی‌شود.'); }
 }
 function closeAnnPage() {
   var pg = document.getElementById('annPage');
@@ -2839,9 +3004,24 @@ function renderExams(filterValue) {
 }
 
 /* ---------- دبیران ---------- */
+/* ترتیب تصادفی دبیران: با هر بار باز شدن سایت یک ترتیب تازه ساخته می‌شود تا حق هیچ دبیری ضایع نشود.
+   کلید تصادفی هر نفر یک‌بار در همین بازدید ثبت می‌شود، پس بازسازی‌های بعدی (ذخیرهٔ مدیر، همگام‌سازی) ترتیب را عوض نمی‌کنند.
+   مدیر و معاونان و کادر سفارشی اول و به ترتیب پنل می‌مانند؛ فقط دبیران بُر می‌خورند. دادهٔ اصلی (TEACHERS) تغییر نمی‌کند. */
+var TEA_RAND = {};
+function teaRandKey(t) {
+  var k = t.name || '';
+  if (!(k in TEA_RAND)) TEA_RAND[k] = Math.random();
+  return TEA_RAND[k];
+}
+function teachersShuffled() {
+  var staff = [], teachers = [];
+  TEACHERS.forEach(function (t) { ((t.role && t.role !== 'teacher') ? staff : teachers).push(t); });
+  teachers.sort(function (a, b) { return teaRandKey(a) - teaRandKey(b); });
+  return staff.concat(teachers);
+}
 function renderTeachers() {
   var grid = document.getElementById('teachersGrid');
-  grid.innerHTML = TEACHERS.map(function (t, i) {
+  grid.innerHTML = teachersShuffled().map(function (t, i) {
     var role = t.role || 'teacher';
     var badge, badgeCls;
     if (role === 'principal') { badge = 'مدیر مدرسه'; badgeCls = 'subject-badge badge-principal'; }
@@ -3264,6 +3444,20 @@ function init() {
     document.getElementById('annPageImg').src = annPagePhotoList[annPagePhotoIdx] || '';
     var btns = document.querySelectorAll('#annPageThumbs button');
     for (var k = 0; k < btns.length; k++) btns[k].classList.toggle('on', k === annPagePhotoIdx);
+    document.getElementById('annPageBg').style.backgroundImage = 'url("' + (annPagePhotoList[annPagePhotoIdx] || '') + '")';
+  });
+  // نوار پیشرفت مطالعه
+  document.getElementById('annPageScroll').addEventListener('scroll', function () {
+    var el = this, max = el.scrollHeight - el.clientHeight;
+    document.getElementById('annPageProg').style.width = (max > 0 ? Math.min(100, el.scrollTop / max * 100) : 0) + '%';
+  }, { passive: true });
+  // اشتراک‌گذاری / کپی / همهٔ اخبار / اخبار دیگر
+  document.getElementById('annPageShare').addEventListener('click', function () { annPageShare(false); });
+  document.getElementById('annPageCopy').addEventListener('click', function () { annPageShare(true); });
+  document.getElementById('annPageAllBtn').addEventListener('click', function () { closeAnnPage(); openAnnAllPage(); });
+  document.getElementById('annPageRelated').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-goto]');
+    if (b) openAnnPage(annPageSorted[+b.getAttribute('data-goto')]);
   });
   // زوم لایت‌باکس: چرخ ماوس + پینچ + درگ + دوبار لمس (Task 46)
   document.getElementById('lightbox').addEventListener('wheel', lbzWheel, { passive: false });
@@ -5758,7 +5952,8 @@ function annSliderCreate() {
   });
 }
 
-function annSliderResizeFn() {
+function annSliderResizeFn(reset) {
+  if (reset === true) ANN_SLIDER_PAGE = 0; // پس از تغییر داده، از جدیدترین خبر شروع شود
   if (ANN_SLIDER) { ANN_SLIDER.destroy(); ANN_SLIDER = null; }
   ANN_SLIDER = annSliderCreate();
 }
@@ -5766,6 +5961,7 @@ window.annSliderResize = annSliderResizeFn; // renderAnnouncements پس از ه�
 
 /* ---------- اسلایدر دبیران و کادر مدرسه: همان اسلایدر اخبار روی کارت‌های دبیران ---------- */
 var TEA_SLIDER = null;
+var TEA_EXPANDED = false; // «مشاهده همه» باز است؟
 var TEA_SLIDER_PAGE = 0; // صفحهٔ فعال اسلایدر دبیران؛ هنگام بازسازی حفظ می‌شود
 
 function teaSliderCreate() {
@@ -5780,9 +5976,25 @@ function teaSliderCreate() {
 
 function teaSliderResizeFn() {
   if (TEA_SLIDER) { TEA_SLIDER.destroy(); TEA_SLIDER = null; }
+  var more = document.getElementById('teaMore');
+  if (more) more.hidden = !(TEACHERS && TEACHERS.length > 4); // با ۴ نفر یا کمتر همه یکجا دیده می‌شوند
+  if (TEA_EXPANDED) return; // در حالت شبکهٔ کامل اسلایدر ساخته نمی‌شود
   TEA_SLIDER = teaSliderCreate();
 }
 window.teaSliderResize = teaSliderResizeFn; // renderTeachers پس از هر تغییر دبیران این را صدا می‌زند
+
+(function () {
+  var btn = document.getElementById('teaMoreBtn');
+  var box = document.getElementById('teaSlider');
+  if (!btn || !box) return;
+  btn.addEventListener('click', function () {
+    TEA_EXPANDED = !TEA_EXPANDED;
+    box.classList.toggle('tea-expanded', TEA_EXPANDED);
+    btn.textContent = TEA_EXPANDED ? 'نمایش کمتر' : 'مشاهده همه';
+    btn.setAttribute('aria-expanded', TEA_EXPANDED ? 'true' : 'false');
+    teaSliderResizeFn();
+  });
+})();
 
 /* تغییر اندازهٔ صفحه: اندازه‌گیری و صفحه‌بندی دوبارهٔ هر دو اسلایدر (با تأخیر کوتاه) */
 var annSliderResizeT = null;
