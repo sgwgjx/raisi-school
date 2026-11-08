@@ -452,19 +452,15 @@ body.annpage-open{overflow:hidden}
 .annpage-imgbtn img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
 .zoom-hint{position:absolute;top:10px;inset-inline-end:10px;width:34px;height:34px;border-radius:50%;background:rgba(8,16,30,.55);border:1.5px solid rgba(255,255,255,.5);display:grid;place-items:center;color:#fff;pointer-events:none}
 .zoom-hint .ic{width:1.05em;height:1.05em}
-.annpage-article{
-  position:relative;z-index:1;margin:-34px 22px 0;background:var(--surface);border:1px solid var(--border);border-radius:22px;
-  box-shadow:0 14px 38px rgba(9,30,66,.12);padding:30px 34px 34px;
-}
-.annpage-article::before{content:'';position:absolute;top:0;inset-inline:34px;height:4px;border-radius:0 0 6px 6px;background:var(--btn-grad)}
+.annpage-article{position:relative;margin:0;padding:22px 4px 8px;background:none;border:0;box-shadow:none}
 .annpage-meta{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:14px}
 .annpage-date,.annpage-read{display:inline-flex;align-items:center;gap:6px;color:var(--text-light);font-size:.8rem}
 .annpage-date .ic,.annpage-read .ic{width:1em;height:1em}
 .annpage-article h2{color:var(--primary);font-size:1.7rem;font-weight:900;line-height:1.85;margin:0 0 18px}
-.annpage-text{border-top:1px solid var(--border);padding-top:20px}
+.annpage-text{padding-top:0}
 .annpage-text p{margin:0 0 18px;color:var(--text);font-size:1rem;line-height:2.25;text-align:justify}
 .annpage-text p:last-child{margin-bottom:0}
-.annpage-text p.annpage-lead{font-size:1.1rem;font-weight:600;line-height:2.15;color:var(--primary);padding-inline-start:16px;border-inline-start:4px solid var(--accent);text-align:start}
+.annpage-text p.annpage-lead{font-size:1rem;font-weight:400;line-height:2.25;color:var(--text);text-align:justify}
 .annpage-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding-top:20px;border-top:1px dashed var(--border)}
 .annpage-more{margin-top:34px}
 .annpage-more h3{font-size:1.05rem;font-weight:900;color:var(--primary);margin:0 0 14px;display:flex;align-items:center;gap:10px}
@@ -490,11 +486,10 @@ body.annpage-open{overflow:hidden}
   .annpage-pill .pill-txt{display:none}
   .annpage-wrap{padding:14px 12px 44px}
   .annpage-cover{border-radius:16px}
-  .annpage-article{margin:-24px 10px 0;padding:24px 18px 26px;border-radius:18px}
-  .annpage-article::before{inset-inline:18px}
+  .annpage-article{margin:0;padding:18px 2px 6px}
   .annpage-article h2{font-size:1.28rem}
   .annpage-text p{font-size:.95rem;text-align:start}
-  .annpage-text p.annpage-lead{font-size:1rem}
+  .annpage-text p.annpage-lead{font-size:.95rem;text-align:start}
   .annpage-rel-grid{grid-template-columns:1fr}
   .annpage-rel-grid .annpage-rel:nth-child(3){display:flex}
   .annpage-rel{flex-direction:row}
@@ -511,7 +506,7 @@ body.annpage-open{overflow:hidden}
 /* صفحهٔ «همهٔ اخبار / همهٔ گالری» — دکمهٔ «مشاهده همه» (Task 65) */
 .allpage-top{width:100%;max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:14px 20px;flex:none}
 .allpage-title{flex:1;font-size:1.05rem;font-weight:800;color:var(--primary);margin:0;line-height:1.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.allpage-tools{width:100%;max-width:1180px;margin:0 auto;padding:0 20px;flex:none}
+.allpage-tools{width:100%;max-width:1180px;margin:0 auto;padding:0 20px 14px;flex:none}
 .allpage-search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;transition:border-color .2s,box-shadow .2s}
 .allpage-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(47,126,195,.15)}
 .allpage-search>.ic{width:1.15em;height:1.15em;color:var(--text-light);flex:none}
@@ -1457,6 +1452,46 @@ section.hero{scroll-margin-top:0}
   .exam-note{margin-top:7px;padding-top:7px;font-size:.76rem;line-height:1.7}
   #exams .filter-bar{margin-bottom:14px;gap:8px}
 }
+
+/* ---------- برنامه کلاسی در موبایل: زبانهٔ روزها + کارت زنگ‌ها ---------- */
+.sched-mobile{display:none}
+@media (max-width:640px){
+  .sched-desktop{display:none}
+  .sched-mobile{display:block}
+  .sched-title{font-size:1rem;margin-bottom:10px}
+  .sm-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;scrollbar-width:none}
+  .sm-tabs::-webkit-scrollbar{display:none}
+  .sm-tab{
+    flex:1 0 auto;padding:8px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;
+    border:1px solid var(--border);background:var(--surface);color:var(--text-light);
+    font:inherit;font-size:.82rem;font-weight:700;
+  }
+  .sm-tab.active{background:#15395f;color:#fff;border-color:#15395f}
+  .sm-panel{display:none;list-style:none;margin:0;padding:0;
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .sm-panel.active{display:block}
+  .sm-panel li{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .sm-panel li:last-child{border-bottom:none}
+  .sm-per{flex:0 0 62px;font-size:.74rem;font-weight:700;text-align:center;
+    background:var(--chip);color:var(--chip-text);padding:4px 0;border-radius:4px}
+  .sm-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .sm-info strong{color:var(--primary);font-size:.95rem;font-weight:800}
+  .sm-info em{font-style:normal;color:var(--text-light);font-size:.78rem}
+  #schedule .filter-bar{margin-bottom:12px}
+}
+
+/* ---------- بنر: یک عکس برای موبایل و کامپیوتر؛ کامل و بدون برش با نسبت اصلی عکس ---------- */
+.hero.welcome,
+.hero.welcome:is(*){height:auto;padding-top:80px}
+.hero.welcome::after{display:none}
+.hero-track{position:relative;inset:auto;width:100%;
+  aspect-ratio:var(--hero-ar,16/7);max-height:calc(100vh - 80px);max-height:calc(100svh - 80px)}
+.hero-slide.is-fit .hero-blur{display:none}
+.hero-slide.is-fit .hero-bg{background-size:cover}
+@media (max-width:700px){
+  .hero.welcome,.hero.welcome:is(*){height:auto;padding-top:70px}
+  .hero-track{max-height:none}
+}
 </style>
 </head>
 
@@ -1730,6 +1765,7 @@ section.hero{scroll-margin-top:0}
     <h2 class="allpage-title">همهٔ اخبار</h2>
     <span class="chip" id="annAllCount"></span>
   </div>
+  <div class="annpage-scroll" id="annAllScroll">
   <div class="allpage-tools">
     <div class="allpage-search">
       <svg class="ic" aria-hidden="true"><use href="#i-zoom"/></svg>
@@ -1739,7 +1775,6 @@ section.hero{scroll-margin-top:0}
       </button>
     </div>
   </div>
-  <div class="annpage-scroll" id="annAllScroll">
     <div class="container allpage-body">
       <div class="ann-list" id="annAllList"></div>
     </div>
@@ -2691,13 +2726,47 @@ function scheduleTableHTML(classId) {
         '</tr>';
     });
   });
+  // نمای موبایل: زبانهٔ روزها + فقط برنامهٔ یک روز (امروز پیش‌فرض است)
+  var todayIdx = (new Date().getDay() + 1) % 7; // شنبه=۰ … چهارشنبه=۴
+  if (todayIdx > DAYS.length - 1) todayIdx = 0;
+  var tabs = '', panels = '';
+  sched.forEach(function (daySubjects, di) {
+    var on = di === todayIdx;
+    tabs += '<button type="button" class="sm-tab' + (on ? ' active' : '') + '" data-day="' + di + '" role="tab" aria-selected="' + on + '">' + DAYS[di] + '</button>';
+    var items = '';
+    daySubjects.forEach(function (subject, pi) {
+      var per = PERIODS[pi] || { name: '' };
+      items +=
+        '<li><span class="sm-per">' + per.name + '</span>' +
+        '<span class="sm-info"><strong>' + escHTML(subject) + '</strong>' +
+        '<em>' + escHTML(getSchedTeacher(classId, di, pi, subject)) + '</em></span></li>';
+    });
+    panels += '<ul class="sm-panel' + (on ? ' active' : '') + '" data-day="' + di + '" role="tabpanel">' + items + '</ul>';
+  });
   return (
-    '<div class="table-wrap"><table class="schedule-table">' +
+    '<div class="table-wrap sched-desktop"><table class="schedule-table">' +
     '<thead><tr><th>زنگ</th><th>درس</th><th>دبیر</th></tr></thead>' +
     '<tbody>' + rows + '</tbody>' +
-    '</table></div>'
+    '</table></div>' +
+    '<div class="sched-mobile"><div class="sm-tabs" role="tablist">' + tabs + '</div>' + panels + '</div>'
   );
 }
+
+// کلیک روی زبانهٔ روزها در نمای موبایل برنامه کلاسی
+document.addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('.sm-tab') : null;
+  if (!b) return;
+  var box = b.closest('.sched-mobile');
+  var d = b.getAttribute('data-day');
+  box.querySelectorAll('.sm-tab').forEach(function (x) {
+    var on = x === b;
+    x.classList.toggle('active', on);
+    x.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  box.querySelectorAll('.sm-panel').forEach(function (x) {
+    x.classList.toggle('active', x.getAttribute('data-day') === d);
+  });
+});
 
 
 
@@ -2776,7 +2845,7 @@ function renderBannerSlides() {
       bl.style.backgroundImage = 'url("' + src + '")';
       (function (slide, data) {
         var im = new Image();
-        im.onload = function () { slide._nw = im.naturalWidth; slide._nh = im.naturalHeight; heroFitSlide(slide); };
+        im.onload = function () { slide._nw = im.naturalWidth; slide._nh = im.naturalHeight; heroFitSlide(slide); if (slide.classList.contains('is-active')) heroSetRatio(slide); };
         im.src = data;
       })(slides[k], src);
     } else { bg.style.backgroundImage = ''; bl.style.backgroundImage = ''; }
@@ -2784,6 +2853,12 @@ function renderBannerSlides() {
 }
 // اگر برای پر کردن قاب، عکس بیش از ۳۰٪ بزرگ‌تر از اندازهٔ واقعی‌اش کش بیاید (یعنی تار می‌شود)،
 // حالت «اندازهٔ طبیعی + پس‌زمینهٔ محو» فعال می‌شود.
+// نسبت قاب بنر = نسبت عکسِ اسلاید فعال؛ در موبایل و کامپیوتر عکس کامل و بدون برش دیده می‌شود
+function heroSetRatio(slide) {
+  var hero = document.getElementById('home');
+  if (!hero || !slide || !slide._nw || !slide._nh) return;
+  hero.style.setProperty('--hero-ar', slide._nw + ' / ' + slide._nh);
+}
 function heroFitSlide(slide) {
   if (!slide || !slide._nw) return;
   var r = slide.getBoundingClientRect();
@@ -2958,7 +3033,6 @@ function openAnnAllPage() {
   annAllRender();
   document.getElementById('annAllScroll').scrollTop = 0;
   document.body.classList.add('annpage-open'); // قفل اسکرول صفحهٔ پشت
-  document.getElementById('annAllSearch').focus();
 }
 function closeAnnAllPage() {
   var pg = document.getElementById('annAllPage');
@@ -3336,6 +3410,8 @@ function lbzPointerUp(e) {
 /* ============================================================
    بخش ۹) راه‌اندازی و اتصال رویدادها
    ============================================================ */
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
 function init() {
   // اعمال تم ذخیره‌شده کاربر
   applySavedTheme();
@@ -5667,6 +5743,7 @@ function heroCreate() {
 
   function show(i) {
     cur = (i + n) % n;
+    heroSetRatio(slides[cur]);
     slides.forEach(function (sl, k) {
       var onn = k === cur;
       sl.classList.toggle('is-active', onn);
