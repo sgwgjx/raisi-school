@@ -1489,8 +1489,10 @@ section.hero{scroll-margin-top:0}
 .hero-slide.is-fit .hero-blur{display:none}
 .hero-slide.is-fit .hero-bg{background-size:cover}
 @media (max-width:700px){
-  .hero.welcome,.hero.welcome:is(*){height:auto;padding-top:70px}
-  .hero-track{max-height:none}
+  .hero.welcome,.hero.welcome:is(*){height:auto;padding-top:0}
+  .hero-track,.hero-track:is(*){aspect-ratio:447/340;height:auto;max-height:none}
+  .hero-slide .hero-blur{display:none!important}
+  .hero-slide .hero-bg,.hero-slide.is-fit .hero-bg{background-size:cover;background-position:center}
 }
 </style>
 </head>
@@ -1805,7 +1807,7 @@ section.hero{scroll-margin-top:0}
         <svg class="ic" aria-hidden="true"><use href="#i-chev-right"/></svg><span class="pill-txt">بازگشت</span>
       </button>
       <span class="annpage-bar-title">خبر مدرسه</span>
-      <button type="button" class="annpage-pill" id="annPageShare" title="اشتراک‌گذاری خبر" aria-label="اشتراک‌گذاری یا کپی خبر">
+      <button type="button" class="annpage-pill" id="annPageShare" title="اشتراک‌گذاری خبر" aria-label="اشتراک‌گذاری خبر">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span class="pill-txt">اشتراک‌گذاری</span>
       </button>
     </div>
@@ -1825,13 +1827,10 @@ section.hero{scroll-margin-top:0}
         <div class="annpage-meta">
           <span class="chip" id="annPageAud"></span>
           <span class="annpage-date" id="annPageDateWrap"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><span id="annPageDate"></span></span>
-          <span class="annpage-read" id="annPageRead"></span>
         </div>
         <h2 id="annPageTitle"></h2>
         <div class="annpage-text" id="annPageText"></div>
         <div class="annpage-actions">
-          <button type="button" class="annpage-pill" id="annPageCopy">کپی متن خبر</button>
-          <button type="button" class="annpage-pill" id="annPageAllBtn">همهٔ اخبار</button>
         </div>
       </article>
       <section class="annpage-more" id="annPageMore" hidden>
@@ -2937,7 +2936,6 @@ function openAnnPage(a) {
   document.getElementById('annPageAud').textContent = audLabel(a.aud);
   document.getElementById('annPageDate').textContent = a.date || '';
   document.getElementById('annPageDateWrap').style.display = a.date ? '' : 'none';
-  document.getElementById('annPageRead').textContent = toFa(annReadMins(a.text)) + ' دقیقه مطالعه';
   document.getElementById('annPageTitle').textContent = a.title;
   // متن: پاراگراف‌بندی؛ پاراگراف اول (یا تنها پاراگراف) به‌صورت «لید» برجسته
   var paras = String(a.text || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
@@ -2973,19 +2971,32 @@ function openAnnPage(a) {
   document.body.classList.add('annpage-open'); // قفل اسکرول صفحهٔ پشت
   document.getElementById('annPageClose').focus();
 }
-function annPageShare(copyOnly) {
+function annPageLink(a) {
+  return location.href.split('#')[0] + '#news=' + encodeURIComponent(a.title || '');
+}
+function annPageShare() {
   var a = annPageCur;
   if (!a) return;
-  if (!copyOnly && navigator.share) {
-    navigator.share({ title: a.title, text: a.text, url: location.href.split('#')[0] }).catch(function () {});
+  var url = annPageLink(a);
+  if (navigator.share) {
+    navigator.share({ title: a.title, url: url }).catch(function () {});
     return;
   }
-  var txt = a.title + '\n\n' + a.text;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(txt).then(
-      function () { showToast('متن خبر کپی شد.'); },
-      function () { showToast('کپی انجام نشد.'); });
-  } else { showToast('کپی در این مرورگر پشتیبانی نمی‌شود.'); }
+    navigator.clipboard.writeText(url).then(
+      function () { showToast('لینک خبر کپی شد.'); },
+      function () { showToast('کپی لینک انجام نشد.'); });
+  } else { showToast('اشتراک‌گذاری در این مرورگر پشتیبانی نمی‌شود.'); }
+}
+// باز کردن خبر از روی لینک اشتراک‌گذاری‌شده (#news=عنوان)
+function annOpenFromHash() {
+  var m = /^#news=(.+)$/.exec(location.hash || '');
+  if (!m) return false;
+  var t; try { t = decodeURIComponent(m[1]); } catch (e) { return false; }
+  for (var i = 0; i < ANNOUNCEMENTS.length; i++) {
+    if (ANNOUNCEMENTS[i].title === t) { openAnnPage(ANNOUNCEMENTS[i]); return true; }
+  }
+  return false;
 }
 function closeAnnPage() {
   var pg = document.getElementById('annPage');
@@ -3524,9 +3535,7 @@ function init() {
     document.getElementById('annPageProg').style.width = (max > 0 ? Math.min(100, el.scrollTop / max * 100) : 0) + '%';
   }, { passive: true });
   // اشتراک‌گذاری / کپی / همهٔ اخبار / اخبار دیگر
-  document.getElementById('annPageShare').addEventListener('click', function () { annPageShare(false); });
-  document.getElementById('annPageCopy').addEventListener('click', function () { annPageShare(true); });
-  document.getElementById('annPageAllBtn').addEventListener('click', function () { closeAnnPage(); openAnnAllPage(); });
+  document.getElementById('annPageShare').addEventListener('click', function () { annPageShare(); });
   document.getElementById('annPageRelated').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-goto]');
     if (b) openAnnPage(annPageSorted[+b.getAttribute('data-goto')]);
@@ -5424,6 +5433,14 @@ adminInit();
   document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
   window.addEventListener('focus', check);
   setTimeout(check, 3000);
+})();
+/* باز کردن خبر از روی لینک اشتراک‌گذاری‌شده */
+(function () {
+  var done = false;
+  function go() { if (!done && annOpenFromHash()) done = true; }
+  setTimeout(go, 300);
+  setTimeout(go, 1500); // اگر داده‌ها از سرور دیرتر رسیدند
+  window.addEventListener('hashchange', function () { done = false; go(); });
 })();
 </script>
 
