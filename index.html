@@ -1656,10 +1656,6 @@ section.hero{scroll-margin-top:0}
         </button>
         <div class="ann-dots" id="teaDots" role="tablist" aria-label="صفحه‌های دبیران"></div>
       </div>
-      <!-- «مشاهده همه»: اسلایدر دبیران به شبکهٔ کامل تبدیل می‌شود و همهٔ دبیران یکجا دیده می‌شوند -->
-      <div class="gallery-more" id="teaMore" hidden>
-        <button type="button" class="btn btn-outline" id="teaMoreBtn" aria-expanded="false">مشاهده همه</button>
-      </div>
     </div>
   </section>
 
@@ -5976,25 +5972,10 @@ function teaSliderCreate() {
 
 function teaSliderResizeFn() {
   if (TEA_SLIDER) { TEA_SLIDER.destroy(); TEA_SLIDER = null; }
-  var more = document.getElementById('teaMore');
-  if (more) more.hidden = !(TEACHERS && TEACHERS.length > 4); // با ۴ نفر یا کمتر همه یکجا دیده می‌شوند
-  if (TEA_EXPANDED) return; // در حالت شبکهٔ کامل اسلایدر ساخته نمی‌شود
   TEA_SLIDER = teaSliderCreate();
 }
 window.teaSliderResize = teaSliderResizeFn; // renderTeachers پس از هر تغییر دبیران این را صدا می‌زند
 
-(function () {
-  var btn = document.getElementById('teaMoreBtn');
-  var box = document.getElementById('teaSlider');
-  if (!btn || !box) return;
-  btn.addEventListener('click', function () {
-    TEA_EXPANDED = !TEA_EXPANDED;
-    box.classList.toggle('tea-expanded', TEA_EXPANDED);
-    btn.textContent = TEA_EXPANDED ? 'نمایش کمتر' : 'مشاهده همه';
-    btn.setAttribute('aria-expanded', TEA_EXPANDED ? 'true' : 'false');
-    teaSliderResizeFn();
-  });
-})();
 
 /* تغییر اندازهٔ صفحه: اندازه‌گیری و صفحه‌بندی دوبارهٔ هر دو اسلایدر (با تأخیر کوتاه) */
 var annSliderResizeT = null;
