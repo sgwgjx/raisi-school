@@ -1454,3 +1454,19 @@ section.hero{scroll-margin-top:0}
 /* زوم صفحه در موبایل غیرفعال است؛ فقط عکس داخل نمایشگر تصویر زوم می‌شود */
 html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 .lightbox,.lightbox figure{touch-action:none}
+
+/* موبایل: هدر روی بنر هم مثل لپ‌تاپ بلور نیمه‌شفاف داشته باشد */
+@media (max-width:700px){
+  .site-header:not(.scrolled):not(:has(.menu-panel.open)){
+    background:rgba(8,20,38,.30);
+    -webkit-backdrop-filter:blur(10px) saturate(1.15);
+    backdrop-filter:blur(10px) saturate(1.15);
+    border-bottom:1px solid rgba(255,255,255,.12);
+  }
+}
+
+/* لپ‌تاپ: عکس بنر از بالای صفحه شروع شود تا هدر روی خود عکس باشد و بلور دیده شود */
+@media (min-width:701px){
+  .hero.welcome,.hero.welcome:is(*){padding-top:0}
+  .hero-track,.hero-track:is(*){max-height:100vh;max-height:100svh}
+}
