@@ -1616,6 +1616,9 @@ function tryAdminPass() {
   if (adminLoginBusy) return;
   var v = adminNormPass(document.getElementById('adminPassInput').value);
   if (!v) return;
+  adminCaptcha(function () { adminDoLogin(v); }); // آخرِ کار، کپچا
+}
+function adminDoLogin(v) {
   var err = document.getElementById('adminGateError');
   var okBtn = document.getElementById('adminGateOk');
   adminLoginBusy = true;
@@ -2740,7 +2743,7 @@ function adminChangePass() {
   if (p1.length < 6) { showToast('رمز جدید باید حداقل ۶ نویسه باشد.'); return; }
   if (p1 === p0) { showToast('رمز جدید باید با رمز فعلی متفاوت باشد.'); return; }
   if (p1 !== p2) { showToast('رمز و تکرار آن یکسان نیست.'); return; }
-  SB.login(p0).then(function (res) {
+  adminCaptcha(function () { SB.login(p0).then(function (res) {
     if (!res.ok) { showToast(res.network ? 'ارتباط با سرور برقرار نشد.' : 'رمز فعلی درست نیست.'); return; }
     return SB.changePassword(p1).then(function () {
       document.getElementById('admPass0').value = '';
@@ -2748,7 +2751,7 @@ function adminChangePass() {
       document.getElementById('admPass2').value = '';
       showToast('رمز جدید مدیر ثبت شد.');
     }).catch(function () { showToast('تغییر رمز انجام نشد؛ رمز قوی‌تری انتخاب کنید یا دوباره تلاش کنید.'); });
-  });
+  }); });
 }
 
 /* ---------- راه‌اندازی پنل ---------- */
@@ -3995,4 +3998,145 @@ document.addEventListener('touchmove', function (e) {
   }
 
   pick(0);
+})();
+
+;
+/* ================= کپچا (ورود مدیر و تغییر رمز) ================= */
+function adminCaptcha(onOk) {
+  if (document.getElementById('capOverlay')) return;
+  var CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  var ov = document.createElement('div');
+  ov.id = 'capOverlay';
+  ov.className = 'cap-overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-label', 'کپچا');
+  ov.innerHTML =
+    '<div class="cap-card" id="capCard">' +
+      '<h3>تأیید امنیتی</h3>' +
+      '<p>حروف و عددهای تصویر را وارد کنید.</p>' +
+      '<div class="cap-row"><canvas id="capCanvas" width="220" height="68"></canvas>' +
+      '<button type="button" class="cap-refresh" id="capRefresh" aria-label="تصویر جدید" title="تصویر جدید">↻</button></div>' +
+      '<input id="capInput" class="cap-input" dir="ltr" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="کد تصویر" aria-label="کد تصویر">' +
+      '<div class="cap-err" id="capErr" hidden>کد اشتباه است؛ تصویر جدید ساخته شد.</div>' +
+      '<div class="cap-actions"><button type="button" class="btn btn-outline" id="capCancel">انصراف</button>' +
+      '<button type="button" class="btn btn-primary" id="capOk">تأیید</button></div>' +
+    '</div>';
+  document.body.appendChild(ov);
+  var cv = ov.querySelector('#capCanvas'), inp = ov.querySelector('#capInput'), errEl = ov.querySelector('#capErr');
+
+  function rnd(n) {
+    if (window.crypto && crypto.getRandomValues) {
+      var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  function draw() {
+    code = '';
+    for (var i = 0; i < 5; i++) code += CH.charAt(rnd(CH.length));
+    var c = cv.getContext('2d'), w = cv.width, h = cv.height;
+    var g = c.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#e8f1fb'); g.addColorStop(1, '#f6ecfa');
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    for (var k = 0; k < 7; k++) {
+      c.strokeStyle = 'rgba(' + rnd(150) + ',' + rnd(150) + ',' + rnd(150) + ',.45)';
+      c.lineWidth = 1 + rnd(2);
+      c.beginPath(); c.moveTo(rnd(w), rnd(h));
+      c.bezierCurveTo(rnd(w), rnd(h), rnd(w), rnd(h), rnd(w), rnd(h)); c.stroke();
+    }
+    for (var d = 0; d < 60; d++) {
+      c.fillStyle = 'rgba(' + rnd(160) + ',' + rnd(160) + ',' + rnd(160) + ',.5)';
+      c.fillRect(rnd(w), rnd(h), 2, 2);
+    }
+    c.textBaseline = 'middle'; c.textAlign = 'center';
+    for (var j = 0; j < code.length; j++) {
+      c.save();
+      c.translate(24 + j * 43 + rnd(6), h / 2 + rnd(12) - 6);
+      c.rotate((rnd(50) - 25) * Math.PI / 180);
+      c.font = '700 ' + (34 + rnd(8)) + 'px Tahoma, Arial, sans-serif';
+      c.fillStyle = 'rgb(' + rnd(110) + ',' + rnd(110) + ',' + (60 + rnd(120)) + ')';
+      c.fillText(code.charAt(j), 0, 0);
+      c.restore();
+    }
+  }
+  function close() {
+    document.removeEventListener('keydown', onKey, true);
+    ov.remove();
+  }
+  function submit() {
+    if (inp.value.trim().toUpperCase() === code) { close(); onOk(); return; }
+    errEl.hidden = false;
+    inp.value = '';
+    draw();
+    var card = ov.querySelector('#capCard');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    inp.focus();
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); submit(); }
+  }
+  document.addEventListener('keydown', onKey, true);
+  ov.querySelector('#capRefresh').addEventListener('click', function () { draw(); inp.value = ''; inp.focus(); });
+  ov.querySelector('#capCancel').addEventListener('click', close);
+  ov.querySelector('#capOk').addEventListener('click', submit);
+  draw();
+  setTimeout(function () { inp.focus(); }, 50);
+}
+
+/* ================= کاربران آنلاین + آی‌پی مدیر ================= */
+(function () {
+  function uuid4() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+    });
+  }
+  var vid;
+  try { vid = sessionStorage.getItem('raisi-vid'); if (!vid) { vid = uuid4(); sessionStorage.setItem('raisi-vid', vid); } }
+  catch (e) { vid = uuid4(); }
+
+  function rpc(name, body) {
+    return fetch(SB.url + '/rest/v1/rpc/' + name, {
+      method: 'POST',
+      headers: { 'apikey': SB.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+  }
+  function ping() {
+    if (document.hidden || !window.SB) return;
+    rpc('heartbeat', { p_id: vid }).catch(function () {});
+  }
+  ping();
+  setInterval(ping, 30000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) ping(); });
+
+  var ip = null, ipBusy = false;
+  function getIp() {
+    if (ip || ipBusy) return;
+    ipBusy = true;
+    function done(v) { ipBusy = false; if (v) { ip = v; document.getElementById('admIp').textContent = v; } }
+    fetch('https://api.ipify.org?format=json').then(function (r) { return r.json(); })
+      .then(function (j) { done(j.ip); })
+      .catch(function () {
+        fetch('https://api64.ipify.org?format=json').then(function (r) { return r.json(); })
+          .then(function (j) { done(j.ip); }).catch(function () { done(null); });
+      });
+  }
+  function tick() {
+    var p = document.getElementById('adminPanel');
+    if (!p || !p.classList.contains('open')) return;
+    getIp();
+    rpc('online_count').then(function (r) { return r.ok ? r.json() : null; }).then(function (n) {
+      var el = document.getElementById('admOnline');
+      if (el) el.textContent = (typeof n === 'number') ? toFa(n) : '—';
+    }).catch(function () {});
+  }
+  setInterval(tick, 15000);
+  var panel = document.getElementById('adminPanel');
+  if (panel && window.MutationObserver) {
+    new MutationObserver(function () { if (panel.classList.contains('open')) tick(); })
+      .observe(panel, { attributes: true, attributeFilter: ['class'] });
+  }
 })();

@@ -1473,3 +1473,32 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 
 /* بخش دبیران: نقطه‌های زیر اسلایدر نمایش داده نشود (تعداد دبیران زیاد است) */
 #teaDots{display:none!important}
+
+/* ===== اسکرول‌بار در کل سایت نامرئی (اسکرول کار می‌کند) ===== */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* ===== پنل مدیریت: کاربران آنلاین و IP ===== */
+.adm-stats{display:flex;align-items:center;gap:8px;margin-inline:auto}
+.adm-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:.78rem;color:var(--text);white-space:nowrap}
+.adm-chip b{font-weight:800;font-variant-numeric:tabular-nums}
+.adm-chip em{font-style:normal;color:var(--text-light);font-size:.72rem}
+.adm-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.22)}
+@media (max-width:700px){
+  .admin-head{flex-wrap:wrap;row-gap:8px}
+  .adm-stats{order:3;width:100%;margin:0;justify-content:flex-start}
+  .adm-chip{font-size:.72rem;padding:4px 9px}
+}
+
+/* ===== کپچا ===== */
+.cap-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,20,38,.45);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);animation:fadeIn .2s ease}
+.cap-card{width:100%;max-width:340px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
+.cap-card h3{margin:0 0 4px;color:var(--primary);font-size:1.05rem}
+.cap-card p{margin:0 0 14px;color:var(--text-light);font-size:.85rem}
+.cap-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cap-row canvas{flex:1;min-width:0;width:100%;height:auto;border-radius:12px;border:1px solid var(--border);background:#fff}
+.cap-refresh{flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--primary);font-size:1.2rem;cursor:pointer}
+.cap-input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:700 1.1rem Tahoma,Arial,sans-serif;text-align:center;letter-spacing:.25em;text-transform:uppercase}
+.cap-err{margin-top:8px;color:#dc2626;font-size:.8rem}
+.cap-actions{display:flex;gap:10px;margin-top:14px}
+.cap-actions .btn{flex:1}

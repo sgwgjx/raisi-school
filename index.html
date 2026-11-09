@@ -47,7 +47,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 
 <body>
@@ -438,6 +438,10 @@
       <svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>
       <div>پنل مدیریت<small>مدرسه شهید آیت‌الله رئیسی</small></div>
     </div>
+    <div class="adm-stats" id="admStats" aria-live="polite">
+      <span class="adm-chip" title="تعداد کاربران آنلاین سایت"><i class="adm-dot"></i><b id="admOnline">—</b><em>آنلاین</em></span>
+      <span class="adm-chip" dir="ltr" title="آی‌پی شما"><em>IP</em><b id="admIp">—</b></span>
+    </div>
     <div class="adm-head-actions">
       <button type="button" class="adm-close adm-logout" id="adminLogoutBtn" title="خروج و قفل کردن پنل" aria-label="خروج و قفل کردن پنل مدیریت"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></button>
       <button class="adm-close" id="adminPanelClose" title="بستن پنل" aria-label="بستن پنل مدیریت"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
@@ -705,7 +709,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=3'];
+    var files = ['script.js?v=4'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;
