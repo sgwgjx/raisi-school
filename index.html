@@ -47,7 +47,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
@@ -114,7 +114,6 @@
       <a class="nav-link" href="#exams">امتحانات</a>
       <a class="nav-link" href="#teachers">دبیران و کادر مدرسه</a>
       <a class="nav-link" href="#gallery">گالری</a>
-      <a class="nav-link" href="#schedule">برنامه کلاسی</a>
     </nav>
 
     <!-- دکمه سه‌خط در گوشه هدر (فقط موبایل/تبلت — Task 64) -->
@@ -706,7 +705,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js'];
+    var files = ['script.js?v=3'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;

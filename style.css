@@ -1470,3 +1470,6 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
   .hero.welcome,.hero.welcome:is(*){padding-top:0}
   .hero-track,.hero-track:is(*){max-height:100vh;max-height:100svh}
 }
+
+/* بخش دبیران: نقطه‌های زیر اسلایدر نمایش داده نشود (تعداد دبیران زیاد است) */
+#teaDots{display:none!important}
