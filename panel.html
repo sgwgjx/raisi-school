@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#15395f">
+<!-- فونت وزیرمتن (Vazirmatn) -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+<title>پنل دانش‌آموزی | مدرسه شهید آیت‌الله رئیسی شیراز</title>
+<style>
+/* ===== هویت بصری برگرفته از style.css سایت اصلی ===== */
+:root{color-scheme:light;--bg:#eef4fa;--surface:#fff;--surface-2:#f4f8fc;--text:#182a3d;--text-light:#5a6b80;--primary:#15395f;--accent:#2f7ec3;--accent-strong:#1d5a99;--chip:#e0edf9;--chip-text:#1d5a99;--border:#d7e3ef;--btn:#1d5a99;--danger:#c02733;--ok:#2a8a57;--warn:#d9942b;--radius:8px}
+
+*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:none;-ms-overflow-style:none}
+::-webkit-scrollbar{width:0;height:0;display:none}
+body{font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.9;transition:background .3s,color .3s}
+button,input,select,textarea{font-family:inherit;font-size:.95rem;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.ic{width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex-shrink:0}
+/* چیدمان */
+.side{position:fixed;inset:0 0 0 auto;width:250px;background:var(--surface);border-left:1px solid var(--border);padding:16px 12px;z-index:50;overflow-y:auto;transition:transform .3s}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);color:var(--text-light);cursor:pointer;font-weight:600;font-size:.92rem;margin-bottom:2px;transition:.2s}
+.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav a.on{background:var(--chip);color:var(--chip-text)}
+.main{margin-inline-start:250px;min-height:100vh}
+.top{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:10px 20px}
+.top h1{font-size:1.1rem;color:var(--primary);flex:1}
+.iconbtn{background:none;border:1px solid var(--border);border-radius:var(--radius);width:40px;height:40px;display:grid;place-items:center;cursor:pointer;position:relative}
+.iconbtn:hover{background:var(--surface-2)}
+.dot{position:absolute;top:6px;left:6px;width:9px;height:9px;background:var(--danger);border-radius:50%}
+.pop{position:absolute;top:56px;left:12px;width:300px;max-width:calc(100vw - 24px);display:none;z-index:60}.pop.open{display:block}
+#menuBtn{display:none}
+.av{width:40px;height:40px;border-radius:50%;background:var(--accent-strong);color:#fff;display:grid;place-items:center;font-weight:800;cursor:pointer;border:0}
+.page{padding:20px;max-width:1150px;margin:auto;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.card h2,.card h3{font-size:1rem;color:var(--primary);margin-bottom:10px}
+.stat{display:flex;align-items:center;gap:14px}
+.stat .si{width:48px;height:48px;border-radius:12px;background:var(--chip);color:var(--chip-text);display:grid;place-items:center;font-size:1.3rem}
+.stat b{font-size:1.5rem;display:block;line-height:1.3}.stat span{color:var(--text-light);font-size:.85rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:12px;font-weight:700;border:1px solid transparent;cursor:pointer;transition:.2s}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--btn);color:#fff}.btn-p:hover{transform:translateY(-2px)}
+.btn-o{background:none;border-color:var(--accent);color:var(--accent-strong)}.btn-o:hover{background:var(--chip)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.sw{position:relative;width:50px;height:26px;border-radius:999px;background:var(--border);border:0;cursor:pointer;flex-shrink:0;transition:background .25s;padding:0}
+.sw i{position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .25s}
+.sw.on{background:var(--btn)}
+.sw.on i{transform:translateX(-24px)}
+.chip{display:inline-block;background:var(--chip);color:var(--chip-text);border-radius:999px;padding:1px 12px;font-size:.78rem;font-weight:700}
+.chip.ok{background:#dff3e8;color:#1d6b42}.chip.warn{background:#fff3d6;color:#8a5a00}.chip.bad{background:#fde9ea;color:var(--danger)}
+
+.chip.live{display:inline-flex;align-items:center;gap:6px}
+.chip.live i{width:8px;height:8px;border-radius:50%;background:#1d6b42;flex-shrink:0;animation:pulse 1.2s infinite}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.row:last-child{border:0}.row .gr{flex:1;min-width:180px}.row small{color:var(--text-light);display:block}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.bar input,.bar select,.fld input,.fld select,.fld textarea{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;width:100%}
+.bar input{flex:1;min-width:180px}.bar select{width:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{background:var(--primary);color:#fff;padding:9px;text-align:center;font-weight:700}
+td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
+.tw{overflow-x:auto}
+.calh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.calh h2{margin:0;font-size:1.1rem;flex:1;text-align:center}.calh .navb{flex:none;width:44px;height:44px;padding:0;border-radius:12px;justify-content:center;align-items:center;gap:0;line-height:0}.navb .ic{width:22px;height:22px;stroke-width:2.5;vertical-align:baseline;margin:0}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .h{font-weight:700;color:var(--text-light);font-size:.8rem}
+.cal .d{min-height:54px;border:1px solid var(--border);border-radius:6px;padding:2px;font-size:.85rem;cursor:default}
+.cal .d.today{border:2px solid var(--accent);background:var(--chip)}
+.cal .d i{display:block;font-style:normal;font-size:.62rem;border-radius:4px;background:var(--accent-strong);color:#fff;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 3px}
+.cal .d i.ev{background:var(--warn)}
+.opts label{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:.2s}
+.opts label:hover{background:var(--surface-2)}.opts label.sel{border-color:var(--accent);background:var(--chip)}
+.exhead::before{content:'';position:absolute;left:-1px;right:-1px;top:-14px;height:14px;background:var(--bg)}.exhead{position:sticky;z-index:30;box-shadow:0 6px 12px -6px rgba(10,20,35,.18);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px}.exhead .gr{display:flex;flex-direction:column;flex:1;min-width:0}.qc{margin-bottom:12px}.qc.flgd{border:2px solid var(--warn)}
+.nsn{margin:6px 0 0;color:var(--text-light);font-size:.88rem;line-height:1.9}.more{color:var(--accent-strong,var(--accent));font-weight:700;text-decoration:none;white-space:nowrap}
+.tt{width:100%;border-collapse:separate;border-spacing:6px;table-layout:fixed}.tt th{font-size:.82rem;padding:4px 2px}.tt th small{display:block;color:var(--text-light);font-weight:400}.tt td{vertical-align:middle;text-align:center;padding:0}.tt .dy{width:64px}.tt .dy b{display:block;font-size:.85rem}.tt tr.today .dy{background:var(--chip);border-radius:10px;padding:6px 2px}
+.tc{background:var(--surface-2);border:1px solid var(--border);border-right:4px solid var(--accent);border-radius:10px;padding:8px 4px;min-height:58px;display:flex;flex-direction:column;justify-content:center;gap:2px}.tc b{font-size:.85rem}.tc small{color:var(--text-light);font-size:.7rem}.tt tr.today .tc{background:var(--chip)}
+.sh{display:flex;align-items:center;gap:8px;margin:0 0 14px}.sh svg{width:24px;height:24px}
+.dtabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}.dtabs button{min-width:0;padding:10px 2px;font-size:.8rem;white-space:nowrap;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;font-weight:700;cursor:pointer}.dtabs button.on{background:var(--btn);color:#fff;border-color:var(--btn)}
+.bells{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}.bl{display:flex;align-items:center;gap:14px;padding:14px;border-bottom:1px solid var(--border)}.bl:last-child{border-bottom:0}.bl .gr{display:flex;flex-direction:column;gap:2px}.bl small{color:var(--text-light)}.bn{background:var(--chip);color:var(--chip-text);border-radius:8px;padding:8px 14px;font-weight:700;font-size:.85rem;white-space:nowrap}
+.qn{display:flex;flex-wrap:wrap;gap:6px}
+.qn button{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-weight:700}
+.qn .ans{background:var(--chip);border-color:var(--accent)}.qn .flg{border:2px solid var(--warn)}.qn .cur{background:var(--btn);color:#fff}
+.timer{font-size:1.4rem;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums}
+.cd{font-size:.82rem;color:var(--text-light);margin-top:4px}.cd b{color:var(--warn);font-variant-numeric:tabular-nums;font-weight:800}
+.modal{position:fixed;inset:0;background:rgba(10,20,35,.55);display:none;place-items:center;z-index:100;padding:16px}
+.modal.open{display:grid}.modal .card{max-width:520px;width:100%;max-height:85vh;overflow:auto}
+.fld{margin-bottom:12px}.fld label{display:block;font-size:.85rem;color:var(--text-light)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:10px 22px;border-radius:12px;z-index:200;display:none}
+.vgrid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.vc{display:flex;flex-direction:column;gap:14px;transition:.2s}.vc:hover{transform:translateY(-3px);border-color:var(--accent)}
+.vc .vci{width:48px;height:48px;border-radius:12px;background:var(--chip);color:var(--chip-text);display:grid;place-items:center;font-size:1.4rem}
+.vc .vcb{flex:1}.vc h3{margin:8px 0 2px;font-size:1.05rem}.vc small{color:var(--text-light)}.vc .btn{justify-content:center}
+.qrow{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:14px}.qrow h3{flex:1}.qimg{width:56px;height:56px;object-fit:contain;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);cursor:zoom-in;flex-shrink:0;transition:.2s}.qimg:hover{transform:scale(1.06);border-color:var(--accent)}
+.dn{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:16px}.dn svg{width:170px;height:170px}.dl{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:.85rem}.dl span{display:inline-flex;align-items:center;gap:6px}.dl i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.shade{display:none}
+@media(max-width:900px){.side{transform:translateX(100%)}.side.open{transform:none}.main{margin:0}#menuBtn{display:grid}.shade.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45}.page{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol>
+<symbol id="file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></symbol>
+<symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="cap" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5zM6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></symbol>
+<symbol id="book" viewBox="0 0 24 24"><path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4zM4 16a4 4 0 0 1 4-4h10"/></symbol>
+<symbol id="dl" viewBox="0 0 24 24"><path d="M12 4v11m-4-4l4 4 4-4M5 20h14"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+<symbol id="star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+<symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 8H4c0-1 2-2 2-8zM10 21h4"/></symbol>
+<symbol id="trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 14v4M8 21h8"/></symbol>
+<symbol id="chr" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+<symbol id="chl" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="vcr" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M10.5 7.8v5.4l4.5-2.7z"/><path d="M8 21h8M12 17v4"/></symbol>
+</defs></svg>
+
+<aside class="side" id="side">
+  <nav class="nav" id="nav"></nav>
+</aside>
+<div class="shade" id="shade"></div>
+
+<div class="main">
+  <header class="top">
+    <button class="iconbtn" id="menuBtn" aria-label="منو"><svg class="ic"><use href="#menu"/></svg></button>
+    <h1 id="title">داشبورد</h1>
+    <button class="iconbtn" id="bellBtn" aria-label="اعلان‌ها"><svg class="ic"><use href="#bell"/></svg><span class="dot"></span></button>
+    <button class="av" id="avBtn" aria-label="پروفایل">ر</button>
+    <div class="card pop" id="pop"></div>
+  </header>
+  <main class="page" id="page"></main>
+</div>
+
+<div class="modal" id="modal"><div class="card" id="mbody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== داده‌های فرضی — در آینده با API جایگزین شود ===== */
+const DB={
+ student:{name:'رضا محمدی',grade:'پایه نهم',cls:'۹-الف',id:'۱۴۰۱۰۴۵۲'},
+ exams:[
+  {id:1,t:'میان‌ترم ریاضی',type:'میان‌ترم',date:[1405,8,25],time:'۰۹:۰۰',dur:45,st:'upcoming',desc:'فصل‌های ۱ تا ۳ کتاب ریاضی. همراه داشتن ماشین‌حساب مجاز نیست.'},
+  {id:2,t:'آمادگی المپیاد علوم',type:'المپیاد',date:[1405,8,28],time:'۱۰:۳۰',dur:60,st:'upcoming'},
+  {id:3,t:'آزمون پیشرفت تحصیلی فیزیک',type:'پیشرفت تحصیلی',date:[1405,9,3],time:'۰۸:۳۰',dur:40,st:'upcoming'},
+  {id:4,t:'آزمون آزمایشی جامع',type:'آزمایشی',date:[1405,9,10],time:'۰۹:۰۰',dur:90,st:'upcoming'},
+  {id:5,t:'تمرین فصل ۳ علوم',type:'تمرینی',date:[1405,8,20],time:'۱۴:۰۰',dur:20,st:'open'},
+  {id:6,t:'میان‌ترم ادبیات',type:'میان‌ترم',date:[1405,7,15],time:'۰۹:۰۰',dur:45,st:'done',score:18.5,stat:{c:37,w:2,n:1}},
+  {id:7,t:'آزمون پیشرفت ریاضی',type:'پیشرفت تحصیلی',date:[1405,7,28],time:'۰۹:۰۰',dur:40,st:'done',score:17,stat:{c:34,w:5,n:1}},
+  {id:8,t:'تمرین هندسه',type:'تمرینی',date:[1405,8,5],time:'۱۴:۰۰',dur:20,st:'done',score:19,stat:{c:19,w:1,n:0}},
+  /* آزمون خارج از پلتفرم: فیلد url را بگذارید (فیلد desc اختیاری است). دکمهٔ نتیجه برای این نوع نمایش داده نمی‌شود */
+  {id:9,t:'آزمون زبان انگلیسی (سامانهٔ بیرونی)',type:'آزمایشی',date:[1405,9,5],time:'۱۰:۰۰',dur:50,st:'upcoming',url:'https://example.com',desc:'این آزمون در سامانهٔ دیگری برگزار می‌شود؛ در زمان آزمون با دکمهٔ ورود وارد شوید.'}],
+ q:[
+  {q:'حاصل عبارت ۳ × (۴ + ۲) چند است؟',img:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><rect width="300" height="200" fill="#e0edf9"/><rect x="10" y="10" width="280" height="180" fill="none" stroke="#2f7ec3" stroke-width="4" stroke-dasharray="10 6"/><text x="150" y="112" font-size="28" text-anchor="middle" fill="#1d5a99">نمونه تصویر سؤال</text></svg>'),o:['۱۴','۱۸','۱۲','۲۴'],a:1},
+  {q:'پایتخت ایران کدام شهر است؟',o:['شیراز','اصفهان','تهران','تبریز'],a:2},
+  {q:'فرمول شیمیایی آب کدام است؟',o:['CO₂','H₂O','O₂','NaCl'],a:1},
+  {q:'کدام سیاره به «سیاره سرخ» معروف است؟',o:['زهره','مشتری','عطارد','مریخ'],a:3},
+  {q:'ریشه دوم عدد ۸۱ چند است؟',o:['۷','۸','۹','۱۱'],a:2}],
+ sched:{'شنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['ورزش','آقای جعفری'],['ادبیات','خانم رضایی']],'یکشنبه':[['ادبیات','خانم رضایی'],['عربی','آقای موسوی'],['ریاضی','خانم احمدی'],['اجتماعی','آقای حسینی']],'دوشنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['زبان انگلیسی','خانم نوری'],['عربی','آقای موسوی']],'سه‌شنبه':[['علوم','آقای کریمی'],['اجتماعی','آقای حسینی'],['ادبیات','خانم رضایی'],['ریاضی','خانم احمدی']],'چهارشنبه':[['نگارش',''],['فرهنگ و هنر',''],['زبان انگلیسی',''],['کار و فناوری','']]},
+ grades:[['ریاضی',[16,17,18,17],'خانم احمدی'],['علوم',[15,17,18,19],'آقای کریمی'],['ادبیات',[18,19,18,18.5],'خانم رضایی'],['عربی',[14,15,16,17],'آقای موسوی'],['انگلیسی',[17,18,19,19],'خانم نوری'],['اجتماعی',[16,16,17,18],'آقای حسینی']],
+ res:[['جزوه فصل ۳ علوم','جزوه','PDF'],['حل تمرین ریاضی نهم','فایل آموزشی','PDF'],['آموزش هندسه: مثلث‌ها','ویدئو','۱۲ دقیقه'],['کتاب درسی ادبیات','منبع درسی','PDF'],['نکات مهم گرامر انگلیسی','جزوه','PDF'],['ویدئو: آزمایش‌های فصل ۳','ویدئو','۸ دقیقه']],
+ news:[{t:'زمان‌بندی آزمون‌های میان‌ترم',k:'آموزشی',d:'۱۴۰۵/۰۸/۱۸',x:'آزمون‌های میان‌ترم از ۲۵ آبان‌ماه آغاز می‌شود. لطفاً برنامه را در بخش تقویم مشاهده کنید و ۱۵ دقیقه زودتر در مدرسه حاضر باشید.'},{t:'جشن روز دانش‌آموز',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۵',x:'مراسم جشن در سالن اجتماعات مدرسه برگزار می‌شود. حضور اولیا آزاد است.'},{t:'ثبت‌نام اردوی علمی',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۰',x:'علاقه‌مندان تا پایان هفته با مراجعه به دفتر مدرسه ثبت‌نام کنند.'}],
+ /* ===== کلاس‌های مجازی — لینک هر کلاس را در فیلد url بگذارید (مثلاً https://meet.google.com/abc-defg-hij) ===== */
+ vcls:[
+  {p:'گوگل میت',url:''},
+  {p:'اسکای‌روم',url:''},
+  {p:'شاد',url:''}],
+ events:[]};
+const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه‌ها','bell'],['prof','پروفایل','user'],['set','تنظیمات','gear']];
+const $=s=>document.querySelector(s);
+const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const J=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic=n=>`<svg class="ic"><use href="#${n}"/></svg>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2200)}
+function modal(h){$('#mbody').innerHTML=h+'<p style="margin-top:14px"><button class="btn btn-o" onclick="closeM()">بستن</button></p>';$('#modal').classList.add('open')}
+function closeM(){$('#modal').classList.remove('open')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+
+/* تاریخ شمسی */
+function g2j(gy,gm,gd){const g=[0,31,59,90,120,151,181,212,243,273,304,334],y=gm>2?gy+1:gy;let d=355666+365*gy+Math.floor((y+3)/4)-Math.floor((y+99)/100)+Math.floor((y+399)/400)+gd+g[gm-1],jy=-1595+33*Math.floor(d/12053);d%=12053;jy+=4*Math.floor(d/1461);d%=1461;if(d>365){jy+=Math.floor((d-1)/365);d=(d-1)%365}return[jy,d<186?1+Math.floor(d/31):7+Math.floor((d-186)/30),1+(d<186?d%31:(d-186)%30)]}
+const now=new Date(),TJ=g2j(now.getFullYear(),now.getMonth()+1,now.getDate());
+const mlen=(y,m)=>m<=6?31:m<=11?30:([1,5,9,13,17,22,26,30].includes(y%33)?30:29);
+const wdToday=(now.getDay()+1)%7; // شنبه=۰
+const jfmt=d=>fa(d[0])+'/'+fa(String(d[1]).padStart(2,'0'))+'/'+fa(String(d[2]).padStart(2,'0'));
+function firstWd(y,m){ // روز هفتهٔ اول ماه با شمارش از امروز
+ let off=-(TJ[2]-1),cy=TJ[0],cm=TJ[1];
+ while(cy>y||(cy===y&&cm>m)){cm--;if(cm<1){cm=12;cy--}off-=mlen(cy,cm)}
+ while(cy<y||(cy===y&&cm<m)){off+=mlen(cy,cm);cm++;if(cm>12){cm=1;cy++}}
+ return((wdToday+off)%7+7)%7}
+
+/* وضعیت */
+const S={page:'dash',cm:TJ[1],cy:TJ[0],ex:null,ts:null};
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const gpa=()=>avg(DB.grades.map(g=>g[1][g[1].length-1]));
+const stCh=s=>({upcoming:'<span class="chip warn">در انتظار</span>',open:'<span class="chip ok">قابل شروع</span>',done:'<span class="chip">انجام‌شده</span>',closed:'<span class="chip bad">بسته شد</span>'}[s]);
+
+/* ناوبری */
+$('#nav').innerHTML=PAGES.map(p=>`<a data-p="${p[0]}" tabindex="0">${ic(p[2])}${p[1]}</a>`).join('');
+$('#nav').onclick=e=>{const a=e.target.closest('a');if(a)go(a.dataset.p)};
+$('#nav').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const a=e.target.closest('a');if(a){e.preventDefault();go(a.dataset.p)}}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();$('#pop').classList.remove('open')}});
+function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
+function render(){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page));const t=PAGES.find(p=>p[0]===S.page);$('#title').textContent=t[1];$('#page').innerHTML=V[S.page]();exStore()}
+
+/* صفحه‌ها */
+const V={
+dash(){const d=DB.exams,up=d.filter(e=>e.st==='upcoming'||e.st==='open').length,dn=d.filter(e=>e.st==='done'),a=avg(dn.map(e=>e.score));
+ return`<div class="grid g4">${[['file',up,'آزمون پیش رو'],['trophy',dn.length,'آزمون انجام‌شده'],['star',fa(a.toFixed(1)),'میانگین نمرات']].map(s=>`<div class="card stat"><div class="si">${ic(s[0])}</div><div><b>${typeof s[1]==='number'?fa(s[1]):s[1]}</b><span>${s[2]}</span></div></div>`).join('')}</div>
+ <div class="grid g2" style="margin-top:16px"><div class="card"><h2>آخرین اطلاعیه‌ها</h2>${DB.news.slice(0,3).map((n,i)=>`<div class="row"><div class="gr"><b>${esc(n.t)}</b><small>${n.d}</small></div><button class="btn btn-o" onclick="showNews(${i})">مشاهده</button></div>`).join('')}</div>
+ <div class="card"><h2>خلاصه وضعیت تحصیلی</h2><p>معدل کل: <b>${fa(gpa().toFixed(2))}</b></p><div id="mini">${chart(DB.grades.map(g=>g[1].reduce((_,x)=>x,0)),DB.grades.map(g=>g[0]))}</div></div></div>`},
+exams(){if(S.ex)return runner();
+ return`<div class="card">${exRows(DB.exams)}</div>`},
+cal(){const y=S.cy,m=S.cm,f=firstWd(y,m),n=mlen(y,m),isT=y===TJ[0]&&m===TJ[1];let c=['ش','ی','د','س','چ','پ','ج'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(f);
+ for(let d=1;d<=n;d++){const ev=DB.events.filter(e=>e[0]===m&&e[1]===d&&y===1405).map(e=>`<i class="${e[3]}" title="${e[2]}">${e[2]}</i>`).join('');c+=`<div class="d ${isT&&d===TJ[2]?'today':''}">${fa(d)}${ev}</div>`}
+ return`<div class="card"><div class="calh"><button class="btn btn-o navb" aria-label="ماه قبل" onclick="cm(-1)">${ic('chr')}</button><h2>${J[m-1]} ${fa(y)}</h2><button class="btn btn-o navb" aria-label="ماه بعد" onclick="cm(1)">${ic('chl')}</button></div>${isT?'':'<p style="text-align:center;margin:0 0 10px"><button class="btn btn-o" onclick="S.cm=TJ[1];S.cy=TJ[0];render()">بازگشت به امروز</button></p>'}<div class="cal">${c}</div></div>`},
+sched(){const dm={6:'شنبه',0:'یکشنبه',1:'دوشنبه',2:'سه‌شنبه',3:'چهارشنبه'},days=Object.keys(DB.sched),bn=['اول','دوم','سوم','چهارم','پنجم','ششم'];if(!S.sd)S.sd=dm[new Date().getDay()]||days[0];const r=DB.sched[S.sd]||[];
+ return`<div class="card"><h2 class="sh">${ic('cal')} برنامه کلاسی هفتگی</h2><div class="dtabs">${days.map(d=>`<button class="${d===S.sd?'on':''}" onclick="S.sd='${d}';render()">${d}</button>`).join('')}</div><div class="bells">${r.map((x,i)=>`<div class="bl"><span class="bn">زنگ ${bn[i]}</span><div class="gr"><b>${x[0]}</b><small>${x[1]||'—'}</small></div></div>`).join('')||'<p style="text-align:center;color:var(--text-light)">برنامه‌ای ثبت نشده است</p>'}</div></div>`},
+res(){return`<div class="grid g4">${DB.res.map(r=>`<div class="card"><span class="chip">${r[1]}</span><h3 style="margin-top:8px">${r[0]}</h3><small style="color:var(--text-light)">${r[2]}</small><p style="margin-top:8px"><button class="btn btn-o" onclick="toast('نمونه نمایشی؛ فایل واقعی متصل نیست')">${ic('dl')} ${r[1]==='ویدئو'?'پخش':'دریافت'}</button></p></div>`).join('')}</div>`},
+vcls(){return`<div class="grid vgrid">${DB.vcls.map((v,i)=>`<div class="card vc"><div class="vci">${ic('vcr')}</div><div class="vcb"><span class="chip">${esc(v.p)}</span></div><button class="btn btn-p" onclick="joinV(${i})">${ic('vcr')} ورود به کلاس</button></div>`).join('')}</div>`},
+news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw"><div class="gr"><b>${esc(n.t)}</b><small>${n.k} · ${n.d}</small><p class="nsn">${esc(n.x.length>70?n.x.slice(0,70).trim()+'… ':n.x)}${n.x.length>70?`<a href="#" class="more" onclick="showNews(${i});return false">بیشتر...</a>`:''}</p></div></div>`).join('')}</div>`},
+prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${s.name[0]}</div><div><h2 style="margin:0">${esc(s.name)}</h2><span class="chip">${esc(s.grade)} · ${esc(s.cls)}</span></div></div>
+ ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1])}</b></div>`).join('')}</div>`},
+set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" onclick="chgPw()">تغییر رمز</button></div>`}
+};
+
+/* نمودار SVG */
+function chart(v,l,line){const W=360,H=170,p=26,max=20,bw=(W-2*p)/v.length;let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><g stroke="var(--border)">${[0,5,10,15,20].map(t=>`<line x1="${p}" x2="${W-p}" y1="${H-p-(H-2*p)*t/max}" y2="${H-p-(H-2*p)*t/max}"/>`).join('')}</g>`;
+ const pts=v.map((x,i)=>[p+bw*i+bw/2,H-p-(H-2*p)*x/max]);
+ s+=line?`<polyline fill="none" stroke="var(--accent)" stroke-width="3" points="${pts.map(q=>q.join(',')).join(' ')}"/>`+pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="var(--accent-strong)"/>`).join(''):pts.map(q=>`<rect x="${q[0]-bw*.3}" y="${q[1]}" width="${bw*.6}" height="${H-p-q[1]}" rx="4" fill="var(--accent)"/>`).join('');
+ return s+l.map((t,i)=>`<text x="${pts[i][0]}" y="${H-8}" font-size="9" text-anchor="middle" fill="var(--text-light)">${t}</text>`).join('')+'</svg>'}
+
+/* آزمون‌ها — ذخیرهٔ خودکار وضعیت + شمارش معکوس تا شروع */
+const SAVE_KEY='exSave',DONE_KEY='exDone';
+function exSave(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'null')}catch(e){return null}}
+function exStore(){if(!S.ex||S.ex.done)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify({id:S.ex.e.id,i:S.ex.i,a:S.ex.a,f:S.ex.f,left:S.ex.left}))}catch(e){}}
+function exClear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function doneLoad(){try{const o=JSON.parse(localStorage.getItem(DONE_KEY)||'{}');DB.exams.forEach(e=>{const v=o[e.id];if(v!==undefined){e.st='done';if(v&&typeof v==='object'){e.score=v.s;e.stat={c:v.c,w:v.w,n:v.n}}else e.score=v}})}catch(e){}}
+function doneStore(){try{const m={};DB.exams.forEach(e=>{if(e.st==='done'&&e.score!==undefined)m[e.id]=e.stat?{s:e.score,c:e.stat.c,w:e.stat.w,n:e.stat.n}:e.score});localStorage.setItem(DONE_KEY,JSON.stringify(m))}catch(e){}}
+/* شمارش معکوس زنده تا زمان شروع آزمون‌های پیش‌رو */
+const WHEN={};
+function jdate(j){const gy=j[0]+621;for(let off=-25;off<400;off++){const d=new Date(gy,2,off),J=g2j(d.getFullYear(),d.getMonth()+1,d.getDate());if(J[0]===j[0]&&J[1]===j[1]&&J[2]===j[2])return d}return null}
+function exWhen(e){if(WHEN[e.id]!==undefined)return WHEN[e.id];const d=jdate(e.date);if(!d)return WHEN[e.id]=null;const t=String(e.time).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)),p=t.split(':').map(Number);d.setHours(p[0]||0,p[1]||0,0,0);return WHEN[e.id]=d}
+const cdTxt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s/3600),m=Math.floor(s/60);return d>0?fa(d)+' روز':h>0?fa(h)+' ساعت':m>0?fa(m)+' دقیقه':fa(s)+' ثانیه'};
+const endT=e=>{const p=String(e.time).replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).split(':').map(Number),m=(p[0]*60+(p[1]||0)+e.dur)%1440;return fa(String(Math.floor(m/60)).padStart(2,'0'))+':'+fa(String(m%60).padStart(2,'0'))};
+setInterval(()=>{let chg=false;DB.exams.forEach(e=>{const w=exWhen(e);if(e.st==='upcoming'){if(w&&Date.now()>=w.getTime()){e.st='open';chg=true}}else if(e.st==='open'&&w&&Date.now()>=w.getTime()+e.dur*60000){if(S.ex&&!S.ex.done&&S.ex.e.id===e.id)finish(true);else{e.st='closed';const sv=exSave();if(sv&&sv.id===e.id)exClear();chg=true}}});if(chg){if(!S.ex&&(S.page==='exams'||S.page==='dash'))render();return}if(S.page!=='exams'||S.ex)return;document.querySelectorAll('.cd[data-e]').forEach(el=>{const e=DB.exams.find(x=>String(x.id)===el.dataset.e);if(!e)return;const w=exWhen(e);if(!w)return;el.innerHTML=e.st==='upcoming'?'شروع تا <b>'+cdTxt(w-Date.now())+'</b>':'بسته تا <b>'+clk(Math.max(0,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)))+'</b>'})},1000);
+function exRows(l){const sv=exSave();return l.length?l.map(e=>{const ext=e.url!==undefined,resume=!ext&&sv&&sv.id===e.id&&e.st==='open',w=exWhen(e),live=w&&(e.st==='upcoming'||e.st==='open');
+ const act=e.st==='done'?(e.score!==undefined?`<span class="chip ok">نمره ${fa(e.score)}</span>`:'')+(ext?'':`<button class="btn btn-o" onclick="showResult(${e.id})">نتیجه</button>`):e.st==='closed'?'':ext?(e.st==='open'?`<button class="btn btn-p" onclick="openExt(${e.id})">${ic('vcr')} ورود به آزمون</button>`:`<button class="btn btn-o" onclick="toast('این آزمون هنوز فعال نشده است')">در انتظار</button>`):resume?`<span class="chip warn">نیمه‌کاره</span><button class="btn btn-p" onclick="startEx(${e.id})">ادامه آزمون</button>`:e.st==='open'?`<button class="btn btn-p" onclick="startEx(${e.id})">شروع آزمون</button>`:`<button class="btn btn-o" onclick="toast('این آزمون هنوز فعال نشده است')">در انتظار</button>`;
+ return`<div class="row"><div class="gr"><b>${e.t}</b> <span class="chip">${jfmt(e.date)}</span><small>${e.type} · ساعت ${e.time} تا ${endT(e)} · ${fa(e.dur)} دقیقه</small>${e.desc?`<p class="nsn">${esc(e.desc)}</p>`:''}${live?`<div class="cd" data-e="${e.id}">${e.st==='upcoming'?'شروع تا <b>'+cdTxt(w-Date.now())+'</b>':'بسته تا <b>'+clk(Math.max(0,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)))+'</b>'}</div>`:''}${resume?`<div class="cd">ادامه آزمون · ${fa(Object.keys(sv.a||{}).length)} پاسخ · ${sv.left!=null?`<b>${clk(sv.left)}</b> باقی‌مانده`:''}</div>`:''}</div>${stCh(e.st)}${act}</div>`}).join(''):''}
+function openExt(id){const e=DB.exams.find(x=>x.id===id),u=((e||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این آزمون هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
+function donut(t){const T=(t.c+t.w+t.n)||1,R=50,C=2*Math.PI*R;let off=0;const seg=[[t.c,'var(--ok)','درست'],[t.w,'var(--danger)','نادرست'],[t.n,'var(--warn)','بدون پاسخ']];
+ const arcs=seg.filter(x=>x[0]>0).map(x=>{const len=x[0]/T*C,r=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${x[1]}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return r}).join('');
+ return`<div class="dn"><svg viewBox="0 0 140 140" role="img" aria-label="نمودار پاسخ‌ها"><circle r="${R}" cx="70" cy="70" fill="none" stroke="var(--border)" stroke-width="22"/>${arcs}<text x="70" y="77" text-anchor="middle" font-size="20" font-weight="800" fill="var(--text)">${fa(Math.round(t.c/T*100))}٪</text></svg><div class="dl">${seg.map(x=>`<span><i style="background:${x[1]}"></i>${x[2]}: <b>${fa(x[0])}</b></span>`).join('')}</div></div>`}
+function showResult(id){const e=DB.exams.find(x=>x.id===id);if(!e)return;modal(`<h2 style="text-align:center">${esc(e.t)}</h2><p style="text-align:center">نمره: <b style="color:var(--ok);font-size:1.3rem">${fa(e.score)}</b> از ۲۰</p>${e.stat?donut(e.stat):'<p style="text-align:center;color:var(--text-light)">جزئیات پاسخ‌ها برای این آزمون موجود نیست</p>'}`)}
+function startEx(id){const e=DB.exams.find(x=>x.id===id),sv=exSave(),same=sv&&sv.id===id,r=same?sv:{i:0,a:{},f:{}},w=exWhen(e),cap=w?Math.max(1,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)):e.dur*60;S.ex={e,i:r.i||0,a:r.a||{},f:r.f||{},done:false,left:Math.min(same&&sv.left>0?sv.left:e.dur*60,cap)};S.page='exams';render();scrollTo(0,0);exStore();S.ts=setInterval(()=>{if(!S.ex||S.ex.done){endTimer();return}S.ex.left--;const t=$('#tm');if(t)t.textContent=clk(S.ex.left);if(S.ex.left<=0)finish(true);else exStore()},1000)}
+const clk=s=>fa(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'));
+function endTimer(){clearInterval(S.ts);S.ts=null}
+function runner(){const x=S.ex,q=DB.q[x.i];
+ if(x.done){const c=DB.q.filter((_,i)=>x.a[i]===DB.q[i].a).length;return`<div class="card" style="text-align:center"><h2>آزمون پایان یافت</h2><p style="font-size:2rem;font-weight:800;color:var(--accent-strong)">${fa(c)} از ${fa(DB.q.length)}</p><p>نمره: <b style="color:var(--ok)">${fa(x.e.score)}</b> از ۲۰</p>${x.e.stat?donut(x.e.stat):''}<p style="margin-top:16px"><button class="btn btn-p" onclick="S.ex=null;render()">بازگشت به آزمون‌ها</button></p></div>`}
+ const N=DB.q.length,th=(document.querySelector('.top')||{}).offsetHeight||60;
+ return`<div class="exhead" style="top:${th}px"><div class="gr"><b>${x.e.t}</b><small>پاسخ‌داده: <span id="cnt">${fa(Object.keys(x.a).length)}</span> از ${fa(N)}</small></div><span class="timer" id="tm">${clk(x.left)}</span></div>
+ ${DB.q.map((q,n)=>`<div class="card qc ${x.f[n]?'flgd':''}" id="q${n}"><small style="color:var(--text-light)">سؤال ${fa(n+1)} از ${fa(N)}</small><div class="qrow"><h3 style="color:var(--text);font-size:1.05rem;margin:8px 0 0">${q.q}</h3>${q.img?`<img class="qimg" src="${esc(q.img)}" alt="تصویر سؤال" title="برای بزرگ‌نمایی لمس کنید" onclick="zoomQ(${n})">`:''}</div><div class="opts">${q.o.map((o,k)=>`<label class="${x.a[n]===k?'sel':''}"><input type="radio" name="o${n}" ${x.a[n]===k?'checked':''} onchange="pick(${n},${k})"> ${o}</label>`).join('')}</div></div>`).join('')}
+ <div class="card"><button class="btn btn-p" style="width:100%" onclick="if(confirm('آزمون را پایان می‌دهید؟'))finish()">پایان آزمون</button></div>`}
+function pick(n,k){const x=S.ex;if(!x||x.done)return;x.a[n]=k;document.querySelectorAll('#q'+n+' .opts label').forEach((l,i)=>l.classList.toggle('sel',i===k));const c=$('#cnt');if(c)c.textContent=fa(Object.keys(x.a).length);exStore()}
+function finish(auto){if(!S.ex||S.ex.done)return;endTimer();const x=S.ex,c=DB.q.filter((_,i)=>x.a[i]===DB.q[i].a).length;const na=DB.q.length-Object.keys(x.a).length;x.done=true;x.e.st='done';x.e.score=+(c/DB.q.length*20).toFixed(1);x.e.stat={c,w:DB.q.length-c-na,n:na};doneStore();exClear();render();toast(auto?'زمان آزمون به پایان رسید و پاسخ‌ها به‌صورت خودکار ثبت شد':'نتیجه آزمون ثبت شد')}
+
+/* سایر تعاملات */
+function zoomQ(n){const u=(DB.q[n]||{}).img;if(!u)return;modal(`<img src="${esc(u)}" alt="تصویر سؤال" style="width:100%;height:auto;display:block;border-radius:8px">`)}
+function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این کلاس هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
+function cm(d){S.cm+=d;if(S.cm>12){S.cm=1;S.cy++}if(S.cm<1){S.cm=12;S.cy--}render()}
+function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');o.value=a.value=b.value='';toast('نمایشی: رمز عبور با موفقیت تغییر کرد')}
+function showNews(i){const n=DB.news[i];modal(`<h2>${esc(n.t)}</h2><p><span class="chip">${n.k}</span> ${n.d}</p><p style="margin-top:10px">${esc(n.x)}</p>`)}
+$('#menuBtn').onclick=()=>{$('#side').classList.add('open');$('#shade').classList.add('open')};
+$('#shade').onclick=()=>{$('#side').classList.remove('open');$('#shade').classList.remove('open')};
+$('#avBtn').onclick=()=>go('prof');
+$('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+DB.news.slice(0,3).map(n=>`<div class="row"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
+document.addEventListener('click',e=>{const p=$('#pop');if(p.classList.contains('open')&&!e.target.closest('#bellBtn')&&!e.target.closest('#pop'))p.classList.remove('open')});
+doneLoad();
+/* آزمون نمونهٔ ۵: پنجرهٔ زندهٔ ۶۰ دقیقه‌ای از همین لحظه */
+(function(){const e=DB.exams.find(x=>x.id===5);if(!e||e.st==='done')return;const pd=n=>fa(String(n).padStart(2,'0'));e.date=[TJ[0],TJ[1],TJ[2]];e.time=pd(now.getHours())+':'+pd(now.getMinutes());e.dur=60})();
+render();
+</script>
+</body>
+</html>

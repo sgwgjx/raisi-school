@@ -1502,3 +1502,10 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 .cap-err{margin-top:8px;color:#dc2626;font-size:.8rem}
 .cap-actions{display:flex;gap:10px;margin-top:14px}
 .cap-actions .btn{flex:1}
+
+
+/* ورود دانش‌آموز (فوتر) */
+.footer-login{display:flex;justify-content:center;padding:0 0 28px}
+.footer-login .btn{display:inline-flex;align-items:center;gap:8px}
+.admin-gate-card .stu-in{letter-spacing:normal;margin-bottom:10px;direction:ltr}
+.admin-gate-card .stu-in::placeholder{direction:rtl}

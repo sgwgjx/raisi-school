@@ -47,7 +47,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 
 <body>
@@ -305,6 +305,9 @@
       <div id="schoolMap" aria-label="نقشه موقعیت مدرسه در شیراز"></div>
     </div>
   </div>
+  <div class="container footer-login">
+    <button type="button" class="btn btn-primary" id="stuLoginBtn"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> ورود دانش‌آموز</button>
+  </div>
   <div class="footer-bottom">
     <button type="button" class="admin-footer-text" id="adminFooterBtn" aria-label="پنل مدیریت مدرسه" title="پنل مدیریت مدرسه">© مدرسه شهید آیت‌الله رئیسی — تمامی حقوق محفوظ است.</button>
   </div>
@@ -412,6 +415,24 @@
   </figure>
 </div>
 
+
+<!-- ============ ورود دانش‌آموز: کد ملی + رمز عبور ============ -->
+<div class="admin-gate" id="stuGate" hidden>
+  <div class="admin-gate-card" id="stuGateCard" role="dialog" aria-modal="true" aria-label="ورود دانش‌آموز">
+    <div class="admin-gate-icon"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
+    <h3>ورود دانش‌آموز</h3>
+    <p>برای ورود به پنل دانش‌آموزی، کد ملی و رمز عبور خود را وارد کنید.</p>
+    <form id="stuGateForm" autocomplete="off" novalidate>
+      <input type="text" id="stuNid" class="stu-in" inputmode="numeric" placeholder="کد ملی" aria-label="کد ملی" maxlength="10" autocomplete="username">
+      <input type="password" id="stuPass" class="stu-in" placeholder="رمز عبور" aria-label="رمز عبور" maxlength="40" autocomplete="current-password">
+      <div class="admin-gate-actions">
+        <button type="button" class="btn btn-outline" id="stuGateCancel">انصراف</button>
+        <button type="submit" class="btn btn-primary">ورود</button>
+      </div>
+      <div class="admin-gate-error" id="stuGateError" hidden></div>
+    </form>
+  </div>
+</div>
 
 <!-- توست پیام‌های کوتاه -->
 <!-- ============ پنل مدیریت: درگاه رمز (Task 11) ============ -->
@@ -709,7 +730,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=4'];
+    var files = ['script.js?v=5'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;

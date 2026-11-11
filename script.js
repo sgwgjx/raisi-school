@@ -4140,3 +4140,49 @@ function adminCaptcha(onOk) {
       .observe(panel, { attributes: true, attributeFilter: ['class'] });
   }
 })();
+
+/* ---------- ورود دانش‌آموز با کد ملی و رمز عبور (فوتر) ----------
+   فعلاً فقط اعتبارسنجی ظاهری انجام می‌شود؛ بررسی واقعی کد ملی/رمز را باید به سرور وصل کرد.
+   بعد از ورود موفق، کاربر به صفحهٔ پنل دانش‌آموزی (STUDENT_PANEL_URL) منتقل می‌شود. */
+(function () {
+  var STUDENT_PANEL_URL = 'panel.html';
+  var gate = document.getElementById('stuGate');
+  if (!gate) return;
+  var form = document.getElementById('stuGateForm'),
+      nid = document.getElementById('stuNid'),
+      pw = document.getElementById('stuPass'),
+      err = document.getElementById('stuGateError'),
+      card = document.getElementById('stuGateCard');
+  function norm(s) {
+    return String(s || '').replace(/[\u06F0-\u06F9]/g, function (d) { return d.charCodeAt(0) - 0x06F0; })
+      .replace(/[\u0660-\u0669]/g, function (d) { return d.charCodeAt(0) - 0x0660; }).trim();
+  }
+  function validNid(v) {
+    if (!/^\d{10}$/.test(v) || /^(\d)\1{9}$/.test(v)) return false;
+    var s = 0, i;
+    for (i = 0; i < 9; i++) s += (+v[i]) * (10 - i);
+    var r = s % 11, k = +v[9];
+    return r < 2 ? k === r : k === 11 - r;
+  }
+  function open() { err.hidden = true; form.reset(); gate.hidden = false; setTimeout(function () { nid.focus(); }, 50); }
+  function close() { gate.hidden = true; }
+  function fail(msg) {
+    err.textContent = msg; err.hidden = false;
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  }
+  document.getElementById('stuLoginBtn').addEventListener('click', open);
+  document.getElementById('stuGateCancel').addEventListener('click', close);
+  gate.addEventListener('click', function (e) { if (e.target === gate) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gate.hidden) close(); });
+  nid.addEventListener('input', function () { nid.value = norm(nid.value).replace(/\D/g, '').slice(0, 10); });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var n = norm(nid.value);
+    if (!n || !pw.value) return fail('کد ملی و رمز عبور را وارد کنید.');
+    if (!validNid(n)) return fail('کد ملی وارد شده معتبر نیست.');
+    try { sessionStorage.setItem('stuLogin', n); } catch (x) {}
+    close();
+    showToast('ورود انجام شد؛ در حال انتقال به پنل…');
+    setTimeout(function () { location.href = STUDENT_PANEL_URL; }, 700);
+  });
+})();
