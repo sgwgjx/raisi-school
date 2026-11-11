@@ -23,6 +23,8 @@ button,input,select,textarea{font-family:inherit;font-size:.95rem;color:inherit}
 .nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);color:var(--text-light);cursor:pointer;font-weight:600;font-size:.92rem;margin-bottom:2px;transition:.2s}
 .nav a:hover{background:var(--surface-2);color:var(--text)}
 .nav a.on{background:var(--chip);color:var(--chip-text)}
+.nav-out{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}.nav-out a{color:var(--danger)}.nav-out a:hover{background:#fde9ea;color:var(--danger)}
+.nw{cursor:pointer}.nw:hover{background:var(--surface-2)}
 .main{margin-inline-start:250px;min-height:100vh}
 .top{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:10px 20px}
 .top h1{font-size:1.1rem;color:var(--primary);flex:1}
@@ -119,11 +121,13 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
 <symbol id="trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 14v4M8 21h8"/></symbol>
 <symbol id="chr" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
 <symbol id="chl" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
 <symbol id="vcr" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M10.5 7.8v5.4l4.5-2.7z"/><path d="M8 21h8M12 17v4"/></symbol>
 </defs></svg>
 
 <aside class="side" id="side">
   <nav class="nav" id="nav"></nav>
+  <div class="nav nav-out"><a id="logoutBtn" tabindex="0" role="button"><svg class="ic"><use href="#out"/></svg>خروج</a></div>
 </aside>
 <div class="shade" id="shade"></div>
 
@@ -165,6 +169,7 @@ const DB={
  sched:{'شنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['ورزش','آقای جعفری'],['ادبیات','خانم رضایی']],'یکشنبه':[['ادبیات','خانم رضایی'],['عربی','آقای موسوی'],['ریاضی','خانم احمدی'],['اجتماعی','آقای حسینی']],'دوشنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['زبان انگلیسی','خانم نوری'],['عربی','آقای موسوی']],'سه‌شنبه':[['علوم','آقای کریمی'],['اجتماعی','آقای حسینی'],['ادبیات','خانم رضایی'],['ریاضی','خانم احمدی']],'چهارشنبه':[['نگارش',''],['فرهنگ و هنر',''],['زبان انگلیسی',''],['کار و فناوری','']]},
  grades:[['ریاضی',[16,17,18,17],'خانم احمدی'],['علوم',[15,17,18,19],'آقای کریمی'],['ادبیات',[18,19,18,18.5],'خانم رضایی'],['عربی',[14,15,16,17],'آقای موسوی'],['انگلیسی',[17,18,19,19],'خانم نوری'],['اجتماعی',[16,16,17,18],'آقای حسینی']],
  res:[['جزوه فصل ۳ علوم','جزوه','PDF'],['حل تمرین ریاضی نهم','فایل آموزشی','PDF'],['آموزش هندسه: مثلث‌ها','ویدئو','۱۲ دقیقه'],['کتاب درسی ادبیات','منبع درسی','PDF'],['نکات مهم گرامر انگلیسی','جزوه','PDF'],['ویدئو: آزمایش‌های فصل ۳','ویدئو','۸ دقیقه']],
+ SITE:'index.html',
  news:[{t:'زمان‌بندی آزمون‌های میان‌ترم',k:'آموزشی',d:'۱۴۰۵/۰۸/۱۸',x:'آزمون‌های میان‌ترم از ۲۵ آبان‌ماه آغاز می‌شود. لطفاً برنامه را در بخش تقویم مشاهده کنید و ۱۵ دقیقه زودتر در مدرسه حاضر باشید.'},{t:'جشن روز دانش‌آموز',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۵',x:'مراسم جشن در سالن اجتماعات مدرسه برگزار می‌شود. حضور اولیا آزاد است.'},{t:'ثبت‌نام اردوی علمی',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۰',x:'علاقه‌مندان تا پایان هفته با مراجعه به دفتر مدرسه ثبت‌نام کنند.'}],
  /* ===== کلاس‌های مجازی — لینک هر کلاس را در فیلد url بگذارید (مثلاً https://meet.google.com/abc-defg-hij) ===== */
  vcls:[
@@ -206,7 +211,7 @@ $('#nav').innerHTML=PAGES.map(p=>`<a data-p="${p[0]}" tabindex="0">${ic(p[2])}${
 $('#nav').onclick=e=>{const a=e.target.closest('a');if(a)go(a.dataset.p)};
 $('#nav').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const a=e.target.closest('a');if(a){e.preventDefault();go(a.dataset.p)}}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();$('#pop').classList.remove('open')}});
-function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
+function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();if(p==='news'){location.href=DB.SITE+'#announcements';return}S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
 function render(){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page));const t=PAGES.find(p=>p[0]===S.page);$('#title').textContent=t[1];$('#page').innerHTML=V[S.page]();exStore()}
 
 /* صفحه‌ها */
@@ -224,7 +229,7 @@ sched(){const dm={6:'شنبه',0:'یکشنبه',1:'دوشنبه',2:'سه‌شن�
  return`<div class="card"><h2 class="sh">${ic('cal')} برنامه کلاسی هفتگی</h2><div class="dtabs">${days.map(d=>`<button class="${d===S.sd?'on':''}" onclick="S.sd='${d}';render()">${d}</button>`).join('')}</div><div class="bells">${r.map((x,i)=>`<div class="bl"><span class="bn">زنگ ${bn[i]}</span><div class="gr"><b>${x[0]}</b><small>${x[1]||'—'}</small></div></div>`).join('')||'<p style="text-align:center;color:var(--text-light)">برنامه‌ای ثبت نشده است</p>'}</div></div>`},
 res(){return`<div class="grid g4">${DB.res.map(r=>`<div class="card"><span class="chip">${r[1]}</span><h3 style="margin-top:8px">${r[0]}</h3><small style="color:var(--text-light)">${r[2]}</small><p style="margin-top:8px"><button class="btn btn-o" onclick="toast('نمونه نمایشی؛ فایل واقعی متصل نیست')">${ic('dl')} ${r[1]==='ویدئو'?'پخش':'دریافت'}</button></p></div>`).join('')}</div>`},
 vcls(){return`<div class="grid vgrid">${DB.vcls.map((v,i)=>`<div class="card vc"><div class="vci">${ic('vcr')}</div><div class="vcb"><span class="chip">${esc(v.p)}</span></div><button class="btn btn-p" onclick="joinV(${i})">${ic('vcr')} ورود به کلاس</button></div>`).join('')}</div>`},
-news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw"><div class="gr"><b>${esc(n.t)}</b><small>${n.k} · ${n.d}</small><p class="nsn">${esc(n.x.length>70?n.x.slice(0,70).trim()+'… ':n.x)}${n.x.length>70?`<a href="#" class="more" onclick="showNews(${i});return false">بیشتر...</a>`:''}</p></div></div>`).join('')}</div>`},
+news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><div class="gr"><b>${esc(n.t)}</b><small>${n.k} · ${n.d}</small><p class="nsn">${esc(n.x.length>70?n.x.slice(0,70).trim()+'… ':n.x)}${n.x.length>70?`<a href="#" class="more" onclick="showNews(${i});event.stopPropagation();return false">بیشتر...</a>`:''}</p></div></div>`).join('')}</div>`},
 prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${s.name[0]}</div><div><h2 style="margin:0">${esc(s.name)}</h2><span class="chip">${esc(s.grade)} · ${esc(s.cls)}</span></div></div>
  ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1])}</b></div>`).join('')}</div>`},
 set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" onclick="chgPw()">تغییر رمز</button></div>`}
@@ -275,13 +280,25 @@ function zoomQ(n){const u=(DB.q[n]||{}).img;if(!u)return;modal(`<img src="${esc(
 function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این کلاس هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
 function cm(d){S.cm+=d;if(S.cm>12){S.cm=1;S.cy++}if(S.cm<1){S.cm=12;S.cy--}render()}
 function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');o.value=a.value=b.value='';toast('نمایشی: رمز عبور با موفقیت تغییر کرد')}
-function showNews(i){const n=DB.news[i];modal(`<h2>${esc(n.t)}</h2><p><span class="chip">${n.k}</span> ${n.d}</p><p style="margin-top:10px">${esc(n.x)}</p>`)}
+function showNews(i){const n=DB.news[i];if(!n)return;location.href=DB.SITE+'#news='+encodeURIComponent(n.t)}
 $('#menuBtn').onclick=()=>{$('#side').classList.add('open');$('#shade').classList.add('open')};
 $('#shade').onclick=()=>{$('#side').classList.remove('open');$('#shade').classList.remove('open')};
 $('#avBtn').onclick=()=>go('prof');
-$('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+DB.news.slice(0,3).map(n=>`<div class="row"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
+$('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+DB.news.slice(0,3).map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o" onclick="go(\'news\')">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
 document.addEventListener('click',e=>{const p=$('#pop');if(p.classList.contains('open')&&!e.target.closest('#bellBtn')&&!e.target.closest('#pop'))p.classList.remove('open')});
 doneLoad();
+$('#logoutBtn').onclick=()=>{if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;try{sessionStorage.removeItem('stuLogin')}catch(e){}location.href=DB.SITE};
+$('#logoutBtn').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#logoutBtn').click()}};
+/* اخبار از سایت اصلی (همان دادهٔ سرور سایت)؛ در صورت خطا همان نمونه‌های بالا می‌ماند */
+(function(){const SB={url:location.origin+'/sb',key:'sb_publishable_1jSLYdzfmthl8HqMckO2yw_-dPmfE8c'};
+ const dg=s=>String(s||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+ const key=a=>{const t=dg(a.date).trim(),d=(t.match(/\d+/g)||[]).map(Number);let day=d[0]||0,y=d[1]||0,m=J.findIndex(x=>t.indexOf(x)>=0)+1;if(!y){y=d.find(n=>n>1300)||0}return y*10000+m*100+day};
+ const kind=a=>!a||a.type==='school'?'کل مدرسه':a.type==='grade'?'پایه '+fa(a.grade):'کلاس';
+ fetch(SB.url+'/rest/v1/site_data?id=eq.main&select=data',{headers:{apikey:SB.key},cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(rows=>{
+  const l=rows&&rows[0]&&rows[0].data&&rows[0].data.announcements;if(!Array.isArray(l)||!l.length)return;
+  const idx=l.map((a,i)=>i).sort((a,b)=>key(l[b])-key(l[a])||a-b);
+  DB.news=idx.map(i=>({t:l[i].title||'',k:kind(l[i].aud),d:l[i].date||'',x:l[i].text||''})).filter(n=>n.t);
+  if(!S.ex&&(S.page==='dash'||S.page==='news'))render()}).catch(()=>{})})();
 /* آزمون نمونهٔ ۵: پنجرهٔ زندهٔ ۶۰ دقیقه‌ای از همین لحظه */
 (function(){const e=DB.exams.find(x=>x.id===5);if(!e||e.st==='done')return;const pd=n=>fa(String(n).padStart(2,'0'));e.date=[TJ[0],TJ[1],TJ[2]];e.time=pd(now.getHours())+':'+pd(now.getMinutes());e.dur=60})();
 render();

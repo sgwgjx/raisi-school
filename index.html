@@ -47,7 +47,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 
 <body>
@@ -133,6 +133,7 @@
       <a href="#teachers"><svg class="ic" aria-hidden="true"><use href="#i-cap"/></svg>دبیران و کادر مدرسه</a>
       <a href="#gallery"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>گالری</a>
       <a href="#schedule"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg>برنامه کلاسی</a>
+      <a href="#student-login" id="stuLoginBtn" role="button"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>ورود دانش‌آموز</a>
     </div>
   </nav>
 </header>
@@ -289,10 +290,6 @@
           <li>
             <svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>
             <span>شنبه تا چهارشنبه ۷:۳۰ تا ۱۲:۱۵</span>
-          </li>
-          <li>
-            <svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
-            <button type="button" class="footer-login-link" id="stuLoginBtn">ورود دانش‌آموز</button>
           </li>
         </ul>
       </div>
@@ -731,7 +728,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=5'];
+    var files = ['script.js?v=6'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;

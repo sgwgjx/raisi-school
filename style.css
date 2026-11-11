@@ -1505,8 +1505,5 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 
 
 /* ورود دانش‌آموز (فوتر) */
-.footer-login-link{padding:0;margin:0;border:0;background:transparent;color:#b7c9dd;-webkit-text-fill-color:#b7c9dd;font:inherit;line-height:inherit;cursor:pointer;text-align:start;transition:color .2s}
-.footer-login-link:hover{color:#82c1f2}
-.footer-login-link:focus-visible{outline:2px solid #5aa7e8;outline-offset:3px;border-radius:6px}
 .admin-gate-card .stu-in{letter-spacing:normal;margin-bottom:10px;direction:ltr}
 .admin-gate-card .stu-in::placeholder{direction:rtl}

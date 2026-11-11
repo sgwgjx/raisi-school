@@ -3251,7 +3251,11 @@ adminInit();
 /* باز کردن خبر از روی لینک اشتراک‌گذاری‌شده */
 (function () {
   var done = false;
-  function go() { if (!done && annOpenFromHash()) done = true; }
+  function go() {
+    if (done) return;
+    if (location.hash === '#announcements') { openAnnAllPage(); done = true; return; } // لینک از پنل دانش‌آموزی: صفحهٔ همهٔ اخبار
+    if (annOpenFromHash()) done = true;
+  }
   setTimeout(go, 300);
   setTimeout(go, 1500); // اگر داده‌ها از سرور دیرتر رسیدند
   window.addEventListener('hashchange', function () { done = false; go(); });
@@ -4170,7 +4174,7 @@ function adminCaptcha(onOk) {
     err.textContent = msg; err.hidden = false;
     card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
   }
-  document.getElementById('stuLoginBtn').addEventListener('click', open);
+  document.getElementById('stuLoginBtn').addEventListener('click', function (e) { e.preventDefault(); open(); });
   document.getElementById('stuGateCancel').addEventListener('click', close);
   gate.addEventListener('click', function (e) { if (e.target === gate) close(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gate.hidden) close(); });
