@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#15395f">
 <!-- فونت وزیرمتن (Vazirmatn) -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+<link rel="preload" href="fonts/Vazir-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <title>پنل دانش‌آموزی | مدرسه شهید آیت‌الله رئیسی شیراز</title>
 <style>
+@font-face{font-family:'Vazirmatn';src:url('fonts/Vazir-Variable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+*,*::before,*::after{font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif!important}
 /* ===== هویت بصری برگرفته از style.css سایت اصلی ===== */
 :root{color-scheme:light;--bg:#eef4fa;--surface:#fff;--surface-2:#f4f8fc;--text:#182a3d;--text-light:#5a6b80;--primary:#15395f;--accent:#2f7ec3;--accent-strong:#1d5a99;--chip:#e0edf9;--chip-text:#1d5a99;--border:#d7e3ef;--btn:#1d5a99;--danger:#c02733;--ok:#2a8a57;--warn:#d9942b;--radius:8px}
 
@@ -24,7 +25,7 @@ button,input,select,textarea{font-family:inherit;font-size:.95rem;color:inherit}
 .nav a:hover{background:var(--surface-2);color:var(--text)}
 .nav a.on{background:var(--chip);color:var(--chip-text)}
 .nav-out{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}.nav-out a{color:var(--danger)}.nav-out a:hover{background:#fde9ea;color:var(--danger)}
-.nw{cursor:pointer}.nw:hover{background:var(--surface-2)}
+.empty{text-align:center;color:var(--text-light);padding:14px 0}.nw{cursor:pointer}.nw:hover{background:var(--surface-2)}
 .main{margin-inline-start:250px;min-height:100vh}
 .top{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:10px 20px}
 .top h1{font-size:1.1rem;color:var(--primary);flex:1}
@@ -136,7 +137,7 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
     <button class="iconbtn" id="menuBtn" aria-label="منو"><svg class="ic"><use href="#menu"/></svg></button>
     <h1 id="title">داشبورد</h1>
     <button class="iconbtn" id="bellBtn" aria-label="اعلان‌ها"><svg class="ic"><use href="#bell"/></svg><span class="dot"></span></button>
-    <button class="av" id="avBtn" aria-label="پروفایل">ر</button>
+    <button class="av" id="avBtn" aria-label="پروفایل"><svg class="ic"><use href="#user"/></svg></button>
     <div class="card pop" id="pop"></div>
   </header>
   <main class="page" id="page"></main>
@@ -148,36 +149,20 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
 <script>
 /* ===== داده‌های فرضی — در آینده با API جایگزین شود ===== */
 const DB={
- student:{name:'رضا محمدی',grade:'پایه نهم',cls:'۹-الف',id:'۱۴۰۱۰۴۵۲'},
- exams:[
-  {id:1,t:'میان‌ترم ریاضی',type:'میان‌ترم',date:[1405,8,25],time:'۰۹:۰۰',dur:45,st:'upcoming',desc:'فصل‌های ۱ تا ۳ کتاب ریاضی. همراه داشتن ماشین‌حساب مجاز نیست.'},
-  {id:2,t:'آمادگی المپیاد علوم',type:'المپیاد',date:[1405,8,28],time:'۱۰:۳۰',dur:60,st:'upcoming'},
-  {id:3,t:'آزمون پیشرفت تحصیلی فیزیک',type:'پیشرفت تحصیلی',date:[1405,9,3],time:'۰۸:۳۰',dur:40,st:'upcoming'},
-  {id:4,t:'آزمون آزمایشی جامع',type:'آزمایشی',date:[1405,9,10],time:'۰۹:۰۰',dur:90,st:'upcoming'},
-  {id:5,t:'تمرین فصل ۳ علوم',type:'تمرینی',date:[1405,8,20],time:'۱۴:۰۰',dur:20,st:'open'},
-  {id:6,t:'میان‌ترم ادبیات',type:'میان‌ترم',date:[1405,7,15],time:'۰۹:۰۰',dur:45,st:'done',score:18.5,stat:{c:37,w:2,n:1}},
-  {id:7,t:'آزمون پیشرفت ریاضی',type:'پیشرفت تحصیلی',date:[1405,7,28],time:'۰۹:۰۰',dur:40,st:'done',score:17,stat:{c:34,w:5,n:1}},
-  {id:8,t:'تمرین هندسه',type:'تمرینی',date:[1405,8,5],time:'۱۴:۰۰',dur:20,st:'done',score:19,stat:{c:19,w:1,n:0}},
-  /* آزمون خارج از پلتفرم: فیلد url را بگذارید (فیلد desc اختیاری است). دکمهٔ نتیجه برای این نوع نمایش داده نمی‌شود */
-  {id:9,t:'آزمون زبان انگلیسی (سامانهٔ بیرونی)',type:'آزمایشی',date:[1405,9,5],time:'۱۰:۰۰',dur:50,st:'upcoming',url:'https://example.com',desc:'این آزمون در سامانهٔ دیگری برگزار می‌شود؛ در زمان آزمون با دکمهٔ ورود وارد شوید.'}],
- q:[
-  {q:'حاصل عبارت ۳ × (۴ + ۲) چند است؟',img:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><rect width="300" height="200" fill="#e0edf9"/><rect x="10" y="10" width="280" height="180" fill="none" stroke="#2f7ec3" stroke-width="4" stroke-dasharray="10 6"/><text x="150" y="112" font-size="28" text-anchor="middle" fill="#1d5a99">نمونه تصویر سؤال</text></svg>'),o:['۱۴','۱۸','۱۲','۲۴'],a:1},
-  {q:'پایتخت ایران کدام شهر است؟',o:['شیراز','اصفهان','تهران','تبریز'],a:2},
-  {q:'فرمول شیمیایی آب کدام است؟',o:['CO₂','H₂O','O₂','NaCl'],a:1},
-  {q:'کدام سیاره به «سیاره سرخ» معروف است؟',o:['زهره','مشتری','عطارد','مریخ'],a:3},
-  {q:'ریشه دوم عدد ۸۱ چند است؟',o:['۷','۸','۹','۱۱'],a:2}],
- sched:{'شنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['ورزش','آقای جعفری'],['ادبیات','خانم رضایی']],'یکشنبه':[['ادبیات','خانم رضایی'],['عربی','آقای موسوی'],['ریاضی','خانم احمدی'],['اجتماعی','آقای حسینی']],'دوشنبه':[['ریاضی','خانم احمدی'],['علوم','آقای کریمی'],['زبان انگلیسی','خانم نوری'],['عربی','آقای موسوی']],'سه‌شنبه':[['علوم','آقای کریمی'],['اجتماعی','آقای حسینی'],['ادبیات','خانم رضایی'],['ریاضی','خانم احمدی']],'چهارشنبه':[['نگارش',''],['فرهنگ و هنر',''],['زبان انگلیسی',''],['کار و فناوری','']]},
- grades:[['ریاضی',[16,17,18,17],'خانم احمدی'],['علوم',[15,17,18,19],'آقای کریمی'],['ادبیات',[18,19,18,18.5],'خانم رضایی'],['عربی',[14,15,16,17],'آقای موسوی'],['انگلیسی',[17,18,19,19],'خانم نوری'],['اجتماعی',[16,16,17,18],'آقای حسینی']],
- res:[['جزوه فصل ۳ علوم','جزوه','PDF'],['حل تمرین ریاضی نهم','فایل آموزشی','PDF'],['آموزش هندسه: مثلث‌ها','ویدئو','۱۲ دقیقه'],['کتاب درسی ادبیات','منبع درسی','PDF'],['نکات مهم گرامر انگلیسی','جزوه','PDF'],['ویدئو: آزمایش‌های فصل ۳','ویدئو','۸ دقیقه']],
+ student:{name:'',grade:'',cls:''},
+ exams:[],
+ q:[],
+ sched:{'شنبه':[],'یکشنبه':[],'دوشنبه':[],'سه‌شنبه':[],'چهارشنبه':[]},
+ res:[],
  SITE:'index.html',
- news:[{t:'زمان‌بندی آزمون‌های میان‌ترم',k:'آموزشی',d:'۱۴۰۵/۰۸/۱۸',x:'آزمون‌های میان‌ترم از ۲۵ آبان‌ماه آغاز می‌شود. لطفاً برنامه را در بخش تقویم مشاهده کنید و ۱۵ دقیقه زودتر در مدرسه حاضر باشید.'},{t:'جشن روز دانش‌آموز',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۵',x:'مراسم جشن در سالن اجتماعات مدرسه برگزار می‌شود. حضور اولیا آزاد است.'},{t:'ثبت‌نام اردوی علمی',k:'مدرسه',d:'۱۴۰۵/۰۸/۱۰',x:'علاقه‌مندان تا پایان هفته با مراجعه به دفتر مدرسه ثبت‌نام کنند.'}],
+ news:[],
  /* ===== کلاس‌های مجازی — لینک هر کلاس را در فیلد url بگذارید (مثلاً https://meet.google.com/abc-defg-hij) ===== */
  vcls:[
   {p:'گوگل میت',url:''},
   {p:'اسکای‌روم',url:''},
   {p:'شاد',url:''}],
  events:[]};
-const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه‌ها','bell'],['prof','پروفایل','user'],['set','تنظیمات','gear']];
+const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه و اخبار','bell'],['prof','پروفایل','user'],['set','تنظیمات','gear']];
 const $=s=>document.querySelector(s);
 const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 const J=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
@@ -211,27 +196,26 @@ $('#nav').innerHTML=PAGES.map(p=>`<a data-p="${p[0]}" tabindex="0">${ic(p[2])}${
 $('#nav').onclick=e=>{const a=e.target.closest('a');if(a)go(a.dataset.p)};
 $('#nav').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const a=e.target.closest('a');if(a){e.preventDefault();go(a.dataset.p)}}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();$('#pop').classList.remove('open')}});
-function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();if(p==='news'){location.href=DB.SITE+'#announcements';return}S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
+function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();if(p==='news'){toSite('#announcements');return}S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
 function render(){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page));const t=PAGES.find(p=>p[0]===S.page);$('#title').textContent=t[1];$('#page').innerHTML=V[S.page]();exStore()}
 
 /* صفحه‌ها */
 const V={
-dash(){const d=DB.exams,up=d.filter(e=>e.st==='upcoming'||e.st==='open').length,dn=d.filter(e=>e.st==='done'),a=avg(dn.map(e=>e.score));
- return`<div class="grid g4">${[['file',up,'آزمون پیش رو'],['trophy',dn.length,'آزمون انجام‌شده'],['star',fa(a.toFixed(1)),'میانگین نمرات']].map(s=>`<div class="card stat"><div class="si">${ic(s[0])}</div><div><b>${typeof s[1]==='number'?fa(s[1]):s[1]}</b><span>${s[2]}</span></div></div>`).join('')}</div>
- <div class="grid g2" style="margin-top:16px"><div class="card"><h2>آخرین اطلاعیه‌ها</h2>${DB.news.slice(0,3).map((n,i)=>`<div class="row"><div class="gr"><b>${esc(n.t)}</b><small>${n.d}</small></div><button class="btn btn-o" onclick="showNews(${i})">مشاهده</button></div>`).join('')}</div>
- <div class="card"><h2>خلاصه وضعیت تحصیلی</h2><p>معدل کل: <b>${fa(gpa().toFixed(2))}</b></p><div id="mini">${chart(DB.grades.map(g=>g[1].reduce((_,x)=>x,0)),DB.grades.map(g=>g[0]))}</div></div></div>`},
+dash(){const d=DB.exams,up=d.filter(e=>e.st==='upcoming'||e.st==='open').length,dn=d.filter(e=>e.st==='done');
+ return`<div class="grid g4">${[['file',up,'آزمون پیش رو'],['trophy',dn.length,'آزمون انجام‌شده']].map(s=>`<div class="card stat"><div class="si">${ic(s[0])}</div><div><b>${fa(s[1])}</b><span>${s[2]}</span></div></div>`).join('')}</div>
+ <div class="card" style="margin-top:16px"><h2>اطلاعیه و اخبار</h2>${DB.news.length?DB.news.slice(0,3).map((n,i)=>`<div class="row"><div class="gr"><b>${esc(n.t)}</b><small>${n.d}</small></div><button class="btn btn-o" onclick="showNews(${i})">مشاهده</button></div>`).join(''):'<p class="empty">اطلاعیه‌ای وجود ندارد</p>'}</div>`},
 exams(){if(S.ex)return runner();
- return`<div class="card">${exRows(DB.exams)}</div>`},
+ return`<div class="card">${DB.exams.length?exRows(DB.exams):'<p class="empty">آزمونی ثبت نشده است</p>'}</div>`},
 cal(){const y=S.cy,m=S.cm,f=firstWd(y,m),n=mlen(y,m),isT=y===TJ[0]&&m===TJ[1];let c=['ش','ی','د','س','چ','پ','ج'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(f);
  for(let d=1;d<=n;d++){const ev=DB.events.filter(e=>e[0]===m&&e[1]===d&&y===1405).map(e=>`<i class="${e[3]}" title="${e[2]}">${e[2]}</i>`).join('');c+=`<div class="d ${isT&&d===TJ[2]?'today':''}">${fa(d)}${ev}</div>`}
- return`<div class="card"><div class="calh"><button class="btn btn-o navb" aria-label="ماه قبل" onclick="cm(-1)">${ic('chr')}</button><h2>${J[m-1]} ${fa(y)}</h2><button class="btn btn-o navb" aria-label="ماه بعد" onclick="cm(1)">${ic('chl')}</button></div>${isT?'':'<p style="text-align:center;margin:0 0 10px"><button class="btn btn-o" onclick="S.cm=TJ[1];S.cy=TJ[0];render()">بازگشت به امروز</button></p>'}<div class="cal">${c}</div></div>`},
+ return`<div class="card"><div class="calh"><button class="btn btn-o navb" aria-label="ماه قبل" onclick="cm(-1)">${ic('chr')}</button><h2>${J[m-1]} ${fa(y)}</h2><button class="btn btn-o navb" aria-label="ماه بعد" onclick="cm(1)">${ic('chl')}</button></div><div class="cal">${c}</div></div>`},
 sched(){const dm={6:'شنبه',0:'یکشنبه',1:'دوشنبه',2:'سه‌شنبه',3:'چهارشنبه'},days=Object.keys(DB.sched),bn=['اول','دوم','سوم','چهارم','پنجم','ششم'];if(!S.sd)S.sd=dm[new Date().getDay()]||days[0];const r=DB.sched[S.sd]||[];
  return`<div class="card"><h2 class="sh">${ic('cal')} برنامه کلاسی هفتگی</h2><div class="dtabs">${days.map(d=>`<button class="${d===S.sd?'on':''}" onclick="S.sd='${d}';render()">${d}</button>`).join('')}</div><div class="bells">${r.map((x,i)=>`<div class="bl"><span class="bn">زنگ ${bn[i]}</span><div class="gr"><b>${x[0]}</b><small>${x[1]||'—'}</small></div></div>`).join('')||'<p style="text-align:center;color:var(--text-light)">برنامه‌ای ثبت نشده است</p>'}</div></div>`},
-res(){return`<div class="grid g4">${DB.res.map(r=>`<div class="card"><span class="chip">${r[1]}</span><h3 style="margin-top:8px">${r[0]}</h3><small style="color:var(--text-light)">${r[2]}</small><p style="margin-top:8px"><button class="btn btn-o" onclick="toast('نمونه نمایشی؛ فایل واقعی متصل نیست')">${ic('dl')} ${r[1]==='ویدئو'?'پخش':'دریافت'}</button></p></div>`).join('')}</div>`},
+res(){if(!DB.res.length)return'<div class="card"><p class="empty">منبع آموزشی ثبت نشده است</p></div>';return`<div class="grid g4">${DB.res.map(r=>`<div class="card"><span class="chip">${r[1]}</span><h3 style="margin-top:8px">${r[0]}</h3><small style="color:var(--text-light)">${r[2]}</small><p style="margin-top:8px"><button class="btn btn-o" onclick="toast('فایل متصل نیست')">${ic('dl')} ${r[1]==='ویدئو'?'پخش':'دریافت'}</button></p></div>`).join('')}</div>`},
 vcls(){return`<div class="grid vgrid">${DB.vcls.map((v,i)=>`<div class="card vc"><div class="vci">${ic('vcr')}</div><div class="vcb"><span class="chip">${esc(v.p)}</span></div><button class="btn btn-p" onclick="joinV(${i})">${ic('vcr')} ورود به کلاس</button></div>`).join('')}</div>`},
 news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><div class="gr"><b>${esc(n.t)}</b><small>${n.k} · ${n.d}</small><p class="nsn">${esc(n.x.length>70?n.x.slice(0,70).trim()+'… ':n.x)}${n.x.length>70?`<a href="#" class="more" onclick="showNews(${i});event.stopPropagation();return false">بیشتر...</a>`:''}</p></div></div>`).join('')}</div>`},
-prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${s.name[0]}</div><div><h2 style="margin:0">${esc(s.name)}</h2><span class="chip">${esc(s.grade)} · ${esc(s.cls)}</span></div></div>
- ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1])}</b></div>`).join('')}</div>`},
+prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${ic('user')}</div><div><h2 style="margin:0">${esc(s.name||'دانش‌آموز')}</h2>${s.grade||s.cls?`<span class="chip">${esc([s.grade,s.cls].filter(Boolean).join(' · '))}</span>`:''}</div></div>
+ ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1]||'—')}</b></div>`).join('')}</div>`},
 set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" onclick="chgPw()">تغییر رمز</button></div>`}
 };
 
@@ -280,11 +264,12 @@ function zoomQ(n){const u=(DB.q[n]||{}).img;if(!u)return;modal(`<img src="${esc(
 function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این کلاس هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
 function cm(d){S.cm+=d;if(S.cm>12){S.cm=1;S.cy++}if(S.cm<1){S.cm=12;S.cy--}render()}
 function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');o.value=a.value=b.value='';toast('نمایشی: رمز عبور با موفقیت تغییر کرد')}
-function showNews(i){const n=DB.news[i];if(!n)return;location.href=DB.SITE+'#news='+encodeURIComponent(n.t)}
+function toSite(h){try{sessionStorage.setItem('fromPanel','1')}catch(e){}location.href=DB.SITE+h}
+function showNews(i){const n=DB.news[i];if(!n)return;toSite('#news='+encodeURIComponent(n.t))}
 $('#menuBtn').onclick=()=>{$('#side').classList.add('open');$('#shade').classList.add('open')};
 $('#shade').onclick=()=>{$('#side').classList.remove('open');$('#shade').classList.remove('open')};
 $('#avBtn').onclick=()=>go('prof');
-$('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+DB.news.slice(0,3).map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o" onclick="go(\'news\')">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
+$('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+(DB.news.length?'':'<p class="empty">اعلانی وجود ندارد</p>')+DB.news.slice(0,3).map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o" onclick="go(\'news\')">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
 document.addEventListener('click',e=>{const p=$('#pop');if(p.classList.contains('open')&&!e.target.closest('#bellBtn')&&!e.target.closest('#pop'))p.classList.remove('open')});
 doneLoad();
 $('#logoutBtn').onclick=()=>{if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;try{sessionStorage.removeItem('stuLogin')}catch(e){}location.href=DB.SITE};
@@ -299,8 +284,6 @@ $('#logoutBtn').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault(
   const idx=l.map((a,i)=>i).sort((a,b)=>key(l[b])-key(l[a])||a-b);
   DB.news=idx.map(i=>({t:l[i].title||'',k:kind(l[i].aud),d:l[i].date||'',x:l[i].text||''})).filter(n=>n.t);
   if(!S.ex&&(S.page==='dash'||S.page==='news'))render()}).catch(()=>{})})();
-/* آزمون نمونهٔ ۵: پنجرهٔ زندهٔ ۶۰ دقیقه‌ای از همین لحظه */
-(function(){const e=DB.exams.find(x=>x.id===5);if(!e||e.st==='done')return;const pd=n=>fa(String(n).padStart(2,'0'));e.date=[TJ[0],TJ[1],TJ[2]];e.time=pd(now.getHours())+':'+pd(now.getMinutes());e.dur=60})();
 render();
 </script>
 </body>

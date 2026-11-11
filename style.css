@@ -1,3 +1,5 @@
+@font-face{font-family:'Vazirmatn';src:url('fonts/Vazir-Variable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+*,*::before,*::after{font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif!important}
 /* ============================================================
    مدرسه شهید آیت‌الله رئیسی — استایل اصلی سایت (تک‌فایلی)
    رنگ‌بندی: آبی تیره، آبی روشن، سفید و خاکستری
@@ -1498,12 +1500,16 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 .cap-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .cap-row canvas{flex:1;min-width:0;width:100%;height:auto;border-radius:12px;border:1px solid var(--border);background:#fff}
 .cap-refresh{flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--primary);font-size:1.2rem;cursor:pointer}
-.cap-input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:700 1.1rem Tahoma,Arial,sans-serif;text-align:center;letter-spacing:.25em;text-transform:uppercase}
+.cap-input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:700 1.1rem 'Vazirmatn',Tahoma,Arial,sans-serif;text-align:center;letter-spacing:.25em;text-transform:uppercase}
 .cap-err{margin-top:8px;color:#dc2626;font-size:.8rem}
 .cap-actions{display:flex;gap:10px;margin-top:14px}
 .cap-actions .btn{flex:1}
 
 
 /* ورود دانش‌آموز (فوتر) */
+.footer-login-link{padding:0;margin:0;border:0;background:transparent;color:#b7c9dd;-webkit-text-fill-color:#b7c9dd;font:inherit;line-height:inherit;cursor:pointer;text-align:start;transition:color .2s}
+.footer-login-link:hover{color:#82c1f2}
+.footer-login-link:focus-visible{outline:2px solid #5aa7e8;outline-offset:3px;border-radius:6px}
+@media (min-width:1081px){.footer-login-item,.menu-login-item{display:none!important}}
 .admin-gate-card .stu-in{letter-spacing:normal;margin-bottom:10px;direction:ltr}
 .admin-gate-card .stu-in::placeholder{direction:rtl}
