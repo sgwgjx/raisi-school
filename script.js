@@ -1593,6 +1593,7 @@ function adminGateTick() {
 function openAdminGate() {
   document.getElementById('adminPassInput').value = '';
   document.getElementById('adminGateError').hidden = true;
+  try { var ue = document.getElementById('adminUserInput'); if (ue) ue.value = localStorage.getItem('raisi-adm-user') || ''; } catch (x) {}
   document.getElementById('adminGate').hidden = false;
   document.body.classList.add('menu-open');
   setTimeout(function () { document.getElementById('adminPassInput').focus(); }, 60);
@@ -1615,14 +1616,22 @@ function tryAdminPass() {
   if (adminLoginBusy) return;
   var v = adminNormPass(document.getElementById('adminPassInput').value);
   if (!v) return;
-  adminCaptcha(function () { adminDoLogin(v); }); // آخرِ کار، کپچا
+  var uEl = document.getElementById('adminUserInput'), u = uEl ? faToEn(uEl.value).trim().toLowerCase() : '';
+  if (u && !/^[a-z0-9_.]{3,30}$/.test(u)) {
+    var er0 = document.getElementById('adminGateError');
+    er0.hidden = false; er0.classList.remove('locked');
+    er0.textContent = 'نام کاربری فقط حروف انگلیسی کوچک، عدد، _ و . دارد (یا خالی بگذارید).';
+    return;
+  }
+  adminCaptcha(function () { adminDoLogin(v, u); }); // آخرِ کار، کپچا
 }
-function adminDoLogin(v) {
+function adminDoLogin(v, u) {
   var err = document.getElementById('adminGateError');
   var okBtn = document.getElementById('adminGateOk');
   adminLoginBusy = true;
   okBtn.disabled = true;
-  SB.login(v).then(function (res) {
+  SB.login(v, u).then(function (res) {
+    if (res.ok) { try { localStorage.setItem('raisi-adm-user', u || ''); } catch (x) {} }
     adminLoginBusy = false;
     okBtn.disabled = false;
     if (res.ok) {

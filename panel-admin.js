@@ -12,7 +12,7 @@
   var BUCKET = 'panel-files';
   var MAX_FILE = 50 * 1024 * 1024;
   var MAX_IMG = 5 * 1024 * 1024;
-  var TABS = ['stu', 'oexam', 'vcls', 'res', 'pcal'];
+  var TABS = ['stu', 'oexam', 'vcls', 'res', 'pcal', 'adm'];
   var PRESETS = ['گوگل میت', 'اسکای‌روم', 'شاد', 'ادوبی کانکت', 'بیگ‌بلوباتن', 'زوم', 'ایتا', 'بله'];
   var RES_KINDS = ['جزوه', 'کتاب', 'نمونه سؤال', 'ویدئو', 'سایر'];
   var EV_KINDS = [['ev', 'رویداد'], ['info', 'اطلاعیه'], ['hol', 'تعطیلی']];
@@ -24,7 +24,7 @@
     content: { vcls: [], resources: [], events: [] },
     exams: [], serverExams: {}, delExams: [], delFiles: [],
     students: [], stuFilter: { cls: '', q: '' }, stuForm: null,
-    lastResults: {}
+    lastResults: {}, admins: [], adminsErr: '', admForm: false
   };
 
   /* ---------------- ابزارهای کوچک ---------------- */
@@ -116,8 +116,22 @@
   }
   function errMsg(e) {
     var m = String((e && e.message) || ''), s = e && e.status;
-    if (m === 'not-logged-in' || m === 'session-expired' || s === 401 || m === 'forbidden' || s === 403)
+    var c = e && e.code;
+    // نشست واقعاً منقضی شده (توکن مدیر نامعتبر/منقضی است)
+    if (m === 'not-logged-in' || m === 'session-expired' || (s === 401 && /JWT|token|expired/i.test(m) && c !== '42501'))
       return 'نشست ورود منقضی شده؛ دوباره وارد پنل شوید.';
+    // نشست سالم است ولی دیتابیس دسترسی مدیر به جدول/تابع را نمی‌دهد (GRANT / سیاست RLS)
+    if (c === '42501' || s === 401 || s === 403 || m === 'forbidden' || /permission denied|row-level security|not allowed/i.test(m))
+      return 'دیتابیس اجازهٔ دسترسی مدیر به جدول‌های پنل دانش‌آموزی را نمی‌دهد (' + m + ')؛ فایل fix-access.sql را یک‌بار در Supabase ← SQL Editor اجرا کنید.';
+    if (/admin_(list|create|set|delete)_admin|admin_users/i.test(m))
+      return 'بخش مدیران هنوز فعال نشده؛ فایل admin-users.sql را یک‌بار در Supabase ← SQL Editor اجرا کنید.';
+    if (m === 'not_admin') return 'فقط مدیرها می‌توانند مدیران را مدیریت کنند.';
+    if (m === 'bad_username') return 'نام کاربری باید ۳ تا ۳۰ نویسهٔ انگلیسی (حرف کوچک، عدد، _ یا .) باشد.';
+    if (m === 'username_taken') return 'این نام کاربری قبلاً استفاده شده است.';
+    if (m === 'short_admin_password') return 'رمز مدیر باید حداقل ۶ نویسه باشد.';
+    if (m === 'cannot_delete_self') return 'نمی‌توانید حساب خودتان را حذف کنید.';
+    if (m === 'cannot_delete_main') return 'مدیر اصلی قابل حذف نیست.';
+    if (m === 'forbidden_main') return 'رمز مدیر اصلی را فقط خود او می‌تواند عوض کند.';
     if (s === 404 || /schema cache|does not exist|PGRST20/i.test(m))
       return 'جدول‌های پنل دانش‌آموزی هنوز ساخته نشده‌اند؛ فایل student-panel.sql را در Supabase (SQL Editor) اجرا کنید.';
     if (e && e.code === '23505' || /duplicate key|unique/i.test(m)) return 'این کد ملی قبلاً ثبت شده است.';
@@ -154,6 +168,34 @@
     if (t === 'grade') return { type: 'grade', grade: Number(w.querySelector('.adm-audgrade select').value) };
     if (t === 'class') return { type: 'class', classId: w.querySelector('.adm-audclass select').value };
     return { type: 'school' };
+  }
+  /* ---------------- انتخاب ساعت (انتخاب‌گر ساده + دکمه‌های میان‌بر) ---------------- */
+  var TIME_QUICK = [[8, 0], [8, 30], [9, 0], [10, 0], [11, 0], [12, 0], [14, 0], [16, 0]];
+  function dayPart(h) { return h < 5 ? 'بامداد' : h < 12 ? 'صبح' : h < 16 ? 'بعدازظهر' : h < 19 ? 'عصر' : 'شب'; }
+  function timeSumText(hh, mm, dur) {
+    var end = hh * 60 + mm + (dur || 0), eh = Math.floor(end / 60) % 24, em = end % 60;
+    return dayPart(hh) + ' · از ' + toFa(pad2(hh) + ':' + pad2(mm)) + ' تا ' + toFa(pad2(eh) + ':' + pad2(em)) +
+      (end >= 1440 ? ' (فردا)' : '');
+  }
+  function timeField(e) {
+    var h = '', m = '', k, mins = [];
+    for (k = 0; k < 24; k++) h += '<option value="' + k + '"' + (k === e.hh ? ' selected' : '') + '>' + toFa(pad2(k)) + '</option>';
+    for (k = 0; k < 60; k += 5) mins.push(k);
+    if (mins.indexOf(e.mm) < 0) { mins.push(e.mm); mins.sort(function (a, b) { return a - b; }); }
+    mins.forEach(function (v) { m += '<option value="' + v + '"' + (v === e.mm ? ' selected' : '') + '>' + toFa(pad2(v)) + '</option>'; });
+    var chips = TIME_QUICK.map(function (t) {
+      return '<button type="button" class="adm-tchip" data-act="tset" data-h="' + t[0] + '" data-m="' + t[1] + '">' + toFa(pad2(t[0]) + ':' + pad2(t[1])) + '</button>';
+    }).join('');
+    return '<div class="adm-field adm-timefield"><span>ساعت شروع</span>' +
+      '<div class="adm-time" dir="ltr"><select class="adm-in adm-th" aria-label="ساعت">' + h + '</select>' +
+      '<b>:</b><select class="adm-in adm-tm" aria-label="دقیقه">' + m + '</select></div>' +
+      '<div class="adm-tchips">' + chips + '</div>' +
+      '<div class="adm-timesum">' + timeSumText(e.hh, e.mm, e.duration) + '</div></div>';
+  }
+  function updateTimeSum(card) {
+    var th = card.querySelector('.adm-th'), tm = card.querySelector('.adm-tm'), du = card.querySelector('.adm-exdur'), el = card.querySelector('.adm-timesum');
+    if (!th || !tm || !el) return;
+    el.textContent = timeSumText(+th.value || 0, +tm.value || 0, Math.max(1, Math.min(600, Number(du && du.value) || 30)));
   }
   function dateRow(o) {
     return '<div class="adm-row">' +
@@ -214,6 +256,7 @@
       PA.ready = true;
       setState('', false);
       PA.renderAll();
+      loadAdmins();
     }).catch(function (e) {
       PA.ready = false;
       setState(errMsg(e), true);
@@ -373,6 +416,66 @@
   }
 
   /* ============================================================
+     تب مدیران — افزودن مدیر با نام کاربری و رمز (ثبت فوری روی سرور)
+     ============================================================ */
+  function loadAdmins() {
+    return apiJson('/rest/v1/rpc/admin_list_admins', { method: 'POST', body: '{}' })
+      .then(function (rows) { PA.admins = arr(rows); PA.adminsErr = ''; PA.renderAdmins(); })
+      .catch(function (e) { PA.adminsErr = errMsg(e); PA.renderAdmins(); });
+  }
+  PA.renderAdmins = function () {
+    var box = $('admAdmList'), fbox = $('admAdmForm'); if (!box || !fbox) return;
+    fbox.innerHTML = PA.admForm ?
+      '<div class="adm-card"><div class="adm-card-head"><strong>مدیر جدید</strong></div>' +
+      '<div class="adm-row">' +
+      '<label class="adm-field"><span>نام نمایشی (فارسی)</span><input class="adm-in af-name" maxlength="40" placeholder="مثلاً: معاون آموزشی"></label>' +
+      '<label class="adm-field"><span>نام کاربری (انگلیسی)</span><input class="adm-in af-user" dir="ltr" maxlength="30" autocapitalize="off" autocomplete="off" placeholder="مثلاً: kazemi"></label>' +
+      '<label class="adm-field"><span>رمز (حداقل ۶ نویسه)</span><input type="text" class="adm-in af-pass" dir="ltr" maxlength="40" autocomplete="off"></label>' +
+      '</div>' +
+      '<div class="adm-note" style="margin:10px 0 0"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>مدیر جدید در پنجرهٔ ورود، «نام کاربری» و رمز خودش را می‌زند. مدیر اصلی با خالی گذاشتن نام کاربری وارد می‌شود. مدیرها دسترسی کامل به پنل دارند.</span></div>' +
+      '<div class="adm-form-btns"><button type="button" class="btn btn-primary" data-act="asave">افزودن مدیر</button>' +
+      '<button type="button" class="btn btn-outline" data-act="acancel">انصراف</button></div></div>' : '';
+    if (PA.adminsErr) { box.innerHTML = '<div class="adm-pstate err">' + escHTML(PA.adminsErr) + '</div>'; return; }
+    box.innerHTML = PA.admins.length ? PA.admins.map(function (a) {
+      return '<div class="adm-stu-row" data-aid="' + escHTML(a.id) + '">' +
+        '<div class="adm-stu-info"><b>' + escHTML(a.display_name || a.username) + '</b><span dir="ltr">' + escHTML(a.username) + '</span></div>' +
+        '<span class="adm-pill">' + (a.is_main ? 'مدیر اصلی' : 'مدیر') + '</span>' +
+        '<div class="adm-stu-btns"><button type="button" class="adm-mini" data-act="apass">رمز جدید</button>' +
+        (a.is_main ? '' : delBtn('adel', 'حذف مدیر')) + '</div></div>';
+    }).join('') : '<div class="adm-empty">در حال دریافت فهرست مدیران…</div>';
+  };
+  function admOf(b) {
+    var row = b.closest('[data-aid]'), id = row ? row.getAttribute('data-aid') : '', r = null;
+    PA.admins.forEach(function (x) { if (x.id === id) r = x; });
+    return r;
+  }
+  function saveAdmin(btn) {
+    var box = $('admAdmForm'), name = val(box, '.af-name').trim(), user = val(box, '.af-user').trim().toLowerCase(), pass = nd(val(box, '.af-pass'));
+    if (!/^[a-z0-9_.]{3,30}$/.test(user)) return showToast('نام کاربری باید ۳ تا ۳۰ نویسهٔ انگلیسی (حرف کوچک، عدد، _ یا .) باشد.');
+    if (pass.length < 6) return showToast('رمز مدیر باید حداقل ۶ نویسه باشد.');
+    btn.disabled = true;
+    apiJson('/rest/v1/rpc/admin_create_admin', { method: 'POST', body: JSON.stringify({ p_username: user, p_name: name || user, p_password: pass }) })
+      .then(function () { PA.admForm = false; showToast('مدیر «' + (name || user) + '» اضافه شد.'); return loadAdmins(); })
+      .catch(function (e) { showToast(errMsg(e)); }).then(function () { btn.disabled = false; });
+  }
+  function adminSetPass(b) {
+    var a = admOf(b); if (!a) return;
+    var p = nd(window.prompt('رمز جدید برای «' + (a.display_name || a.username) + '» (حداقل ۶ نویسه):') || '');
+    if (!p) return;
+    if (p.length < 6) return showToast('رمز مدیر باید حداقل ۶ نویسه باشد.');
+    apiJson('/rest/v1/rpc/admin_set_admin_password', { method: 'POST', body: JSON.stringify({ p_id: a.id, p_password: p }) })
+      .then(function () { showToast('رمز «' + (a.display_name || a.username) + '» تغییر کرد.'); })
+      .catch(function (e) { showToast(errMsg(e)); });
+  }
+  function adminDelete(b) {
+    var a = admOf(b); if (!a) return;
+    if (!window.confirm('مدیر «' + (a.display_name || a.username) + '» حذف شود؟ دیگر نمی‌تواند وارد پنل شود.')) return;
+    apiJson('/rest/v1/rpc/admin_delete_admin', { method: 'POST', body: JSON.stringify({ p_id: a.id }) })
+      .then(function () { showToast('مدیر حذف شد.'); return loadAdmins(); })
+      .catch(function (e) { showToast(errMsg(e)); });
+  }
+
+  /* ============================================================
      تب ۲) آزمون آنلاین
      ============================================================ */
   function qBlock(q, e, j) {
@@ -400,7 +503,7 @@
       delBtn('exdel', 'حذف آزمون') + '</div>' +
       dateRow(e) +
       '<div class="adm-row">' +
-      '<label class="adm-field"><span>ساعت شروع</span><input type="time" class="adm-in adm-extime" value="' + pad2(e.hh) + ':' + pad2(e.mm) + '"></label>' +
+      timeField(e) +
       '<label class="adm-field"><span>مدت آزمون (دقیقه)</span><input type="number" min="1" max="600" class="adm-in adm-exdur" value="' + e.duration + '"></label>' +
       '</div>' + audHTML(e.aud) +
       '<label class="adm-field" style="margin-top:10px"><span>توضیحات برای دانش‌آموز (اختیاری)</span><input class="adm-in adm-exdesc" maxlength="200" value="' + escHTML(e.descr) + '"></label>';
@@ -430,7 +533,8 @@
       var e = PA.exams[+card.getAttribute('data-i')]; if (!e) return;
       e.title = val(card, '.adm-extitle').trim();
       var d = adminCardDate(card); e.y = d.y; e.m = d.m; e.d = d.d;
-      var tm = (val(card, '.adm-extime') || '08:00').split(':'); e.hh = +tm[0] || 0; e.mm = +tm[1] || 0;
+      var th = card.querySelector('.adm-th'), tmn = card.querySelector('.adm-tm');
+      e.hh = th ? (+th.value || 0) : 8; e.mm = tmn ? (+tmn.value || 0) : 0;
       e.duration = Math.max(1, Math.min(600, Number(val(card, '.adm-exdur')) || 30));
       e.descr = val(card, '.adm-exdesc').trim();
       e.aud = readAud(card);
@@ -590,7 +694,7 @@
      ============================================================ */
   PA.renderAll = function () {
     if (!PA.ready) return;
-    PA.renderStudents(); PA.renderExams(); PA.renderVcls(); PA.renderRes(); PA.renderEvents();
+    PA.renderStudents(); PA.renderExams(); PA.renderVcls(); PA.renderRes(); PA.renderEvents(); PA.renderAdmins();
   };
   PA.collect = function () {
     if (!PA.ready) return;
@@ -686,7 +790,11 @@
       for (var i = 0; i < rs.length; i++) {
         if (!rs[i].ok) {
           var st = rs[i].status;
-          return rs[i].text().then(function (t) { var er = new Error(t); er.status = st; throw er; });
+          return rs[i].text().then(function (t) {
+            var j = null; try { j = JSON.parse(t); } catch (x) {}
+            var er = new Error((j && (j.message || j.error || j.msg)) || t || ('http ' + st));
+            er.status = st; er.code = j && j.code; throw er;
+          });
         }
       }
       var more = [];
@@ -730,7 +838,8 @@
     }).then(function (r) {
       if (r.ok) return path;
       return r.text().then(function (t) {
-        var er = new Error(t || ('upload ' + r.status)); er.status = r.status;
+        var jj = null; try { jj = JSON.parse(t); } catch (x) {}
+        var er = new Error((jj && (jj.message || jj.error)) || t || ('upload ' + r.status)); er.status = r.status;
         if (/bucket not found/i.test(t)) er.status = 404;
         throw er;
       });
@@ -790,6 +899,22 @@
       case 'sbsave': saveBulk(b); break;
       case 'spass': if (stu) resetPassword(stu); break;
       case 'sdel': if (stu) deleteStudent(stu); break;
+
+      /* ساعت شروع آزمون: دکمه‌های میان‌بر */
+      case 'tset':
+        if (card) {
+          card.querySelector('.adm-th').value = b.getAttribute('data-h');
+          card.querySelector('.adm-tm').value = b.getAttribute('data-m');
+          updateTimeSum(card); PA.collect(); PA.dirty = true;
+        }
+        break;
+
+      /* مدیران */
+      case 'aadd': PA.admForm = true; PA.renderAdmins(); break;
+      case 'acancel': PA.admForm = false; PA.renderAdmins(); break;
+      case 'asave': saveAdmin(b); break;
+      case 'apass': adminSetPass(b); break;
+      case 'adel': adminDelete(b); break;
 
       /* آزمون */
       case 'exadd':
@@ -856,15 +981,17 @@
     e.stopPropagation();
     var t = e.target;
     if (t.id === 'admStuSearch') { PA.stuFilter.q = t.value; renderStuListOnly(); return; }
-    if (t.closest && t.closest('#atab-stu')) return;
+    if (t.closest && t.closest('#atab-stu, #atab-adm')) return;
+    if (t.classList && t.classList.contains('adm-exdur')) { var c2 = t.closest('.adm-card'); if (c2) updateTimeSum(c2); }
     PA.collect(); PA.dirty = true;
   }
   function onChange(e) {
     e.stopPropagation();
     var t = e.target;
     if (t.id === 'admStuClass') { PA.stuFilter.cls = t.value; renderStuListOnly(); return; }
-    if (t.closest && t.closest('#atab-stu')) return;
+    if (t.closest && t.closest('#atab-stu, #atab-adm')) return;
     var card = t.closest ? t.closest('.adm-card') : null;
+    if (card && /\badm-(th|tm|exdur)\b/.test(t.className)) updateTimeSum(card);
     if ((t.classList.contains('adm-dM') || t.classList.contains('adm-dY')) && card) {
       var dSel = card.querySelector('.adm-dD');
       adminFillDayOptions(dSel, Number(card.querySelector('.adm-dY').value), Number(card.querySelector('.adm-dM').value), Number(dSel.value) || 1);

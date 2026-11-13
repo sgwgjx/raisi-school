@@ -1,9 +1,9 @@
 /* سرویس‌ورکر: بعد از اولین ورود، سایت روی گوشی ذخیره می‌شود و بدون اینترنت هم باز می‌شود.
    برای انتشار نسخه‌ی جدید، فقط شماره‌ی VERSION را عوض کن. */
-var VERSION = 'v13';
+var VERSION = 'v15';
 var STATIC = 'raisi-static-' + VERSION;
 var DATA = 'raisi-data-' + VERSION;
-var CORE = ['./', 'index.html', 'style.css?v=13', 'script.js?v=13', 'panel-admin.js?v=13', 'manifest.webmanifest', 'Vazir-Variable.woff2',
+var CORE = ['./', 'index.html', 'style.css?v=15', 'script.js?v=15', 'panel-admin.js?v=15', 'manifest.webmanifest', 'Vazir-Variable.woff2',
   'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 var CDN = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

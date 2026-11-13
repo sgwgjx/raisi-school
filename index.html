@@ -45,7 +45,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 
 <body>
@@ -444,6 +444,7 @@
     <h3>ورود مدیر</h3>
     <p>برای ورود به پنل مدیریت، رمز مدیر را وارد کنید.</p>
     <form id="adminGateForm" autocomplete="off">
+      <input type="text" id="adminUserInput" placeholder="نام کاربری (مدیر اصلی: خالی)" aria-label="نام کاربری مدیر" dir="ltr" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false">
       <input type="password" id="adminPassInput" placeholder="رمز ورود" aria-label="رمز ورود مدیر" maxlength="40" autocomplete="off">
       <div class="admin-gate-actions">
         <button type="button" class="btn btn-outline" id="adminGateCancel">انصراف</button>
@@ -484,6 +485,7 @@
     <button type="button" data-atab="pcal"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg>تقویم دانش‌آموزی</button>
     <button type="button" data-atab="teacher"><svg class="ic" aria-hidden="true"><use href="#i-cap"/></svg>دبیران و کادر مدرسه</button>
     <button type="button" data-atab="gallery"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>گالری</button>
+    <button type="button" data-atab="adm"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>مدیران</button>
     <button type="button" data-atab="set"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>تنظیمات</button>
   </div>
 
@@ -605,6 +607,14 @@
         <div id="admGalleryList"></div>
       </section>
 
+      <section class="admin-tab" id="atab-adm">
+        <div class="adm-note"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>مدیر جدید با «نام کاربری» و رمز خودش وارد پنل می‌شود. این بخش فوری روی سرور ذخیره می‌شود (نیازی به دکمه «ذخیره تغییرات» نیست).</span></div>
+        <div class="adm-toolbar"><div><strong>مدیران</strong></div>
+          <div class="adm-toolbar-btns"><button type="button" class="adm-add" data-act="aadd"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>افزودن مدیر</button></div></div>
+        <div id="admAdmForm"></div>
+        <div id="admAdmList"></div>
+      </section>
+
       <section class="admin-tab" id="atab-set">
         <div class="adm-set-card">
           <h4><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>تغییر رمز ورود</h4>
@@ -691,10 +701,12 @@
     });
   };
 
-  SB.login = function (password) {
+  SB.login = function (password, username) {
+    var u = String(username || '').trim().toLowerCase();
+    var email = (u && u !== 'admin' && /^[a-z0-9_.]{3,30}$/.test(u)) ? (u + '@raisi-school.com') : SB.email;
     return req('/auth/v1/token?grant_type=password', {
       method: 'POST',
-      body: JSON.stringify({ email: SB.email, password: password })
+      body: JSON.stringify({ email: email, password: password })
     }, 15000).then(function (r) {
       return r.json().then(function (j) {
         if (r.ok && j.access_token) { setFromTokenResponse(j); return { ok: true }; }
@@ -780,7 +792,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=13', 'panel-admin.js?v=13'];
+    var files = ['script.js?v=15', 'panel-admin.js?v=15'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;
