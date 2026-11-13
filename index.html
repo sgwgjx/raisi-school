@@ -45,7 +45,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 
 <body>
@@ -556,7 +556,7 @@
             <button type="button" class="adm-add" data-act="sadd"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>افزودن دانش‌آموز</button>
           </div></div>
         <div id="admStuForm"></div>
-        <div class="adm-row adm-stu-filter"><select class="adm-in" id="admStuClass" aria-label="فیلتر کلاس"></select><input class="adm-in" id="admStuSearch" placeholder="جستجوی نام یا کد ملی" aria-label="جستجو"></div>
+        <div class="adm-row adm-stu-filter"><div class="adm-cfilter" id="admStuClass" aria-label="فیلتر کلاس"></div><input class="adm-in" id="admStuSearch" placeholder="جستجوی نام یا کد ملی" aria-label="جستجو"></div>
         <div id="admStuList"></div>
       </section>
 
@@ -792,7 +792,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=15', 'panel-admin.js?v=15'];
+    var files = ['script.js?v=19', 'panel-admin.js?v=19'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;

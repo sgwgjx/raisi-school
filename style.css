@@ -1560,3 +1560,20 @@ body.dark-mode .adm-pstate.err{background:rgba(192,39,51,.16);color:#ffb3b8}
 .adm-tchip{padding:5px 11px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);color:var(--accent);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
 .adm-tchip:hover{background:var(--chip)}
 .adm-timesum{margin-top:8px;font-size:.82rem;color:var(--text-light)}
+
+/* انتخاب کلاس با دکمه (فرم دانش‌آموز و فیلتر لیست) */
+.adm-cpick,.adm-cfilter{display:flex;flex-direction:column;gap:8px}
+.adm-cgrp{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.adm-cgl{min-width:72px;font-size:.8rem;font-weight:800;color:var(--text-light)}
+.adm-cchip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.86rem;font-weight:700;cursor:pointer;transition:background .12s,border-color .12s}
+.adm-cchip:hover{background:var(--chip);border-color:var(--accent)}
+.adm-cchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.adm-cchip em{font-style:normal;font-size:.72rem;opacity:.75}
+.adm-stu-filter{display:block}
+.adm-stu-filter #admStuSearch{margin-top:10px}
+.adm-stu-row.adm-new{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,126,195,.25);animation:admNew 2.4s ease-out 1}
+@keyframes admNew{0%{background:var(--chip)}100%{background:var(--surface)}}
+
+/* ردیف مدیر: نام + نام کاربری کنار هم */
+.adm-aline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.adm-uname{unicode-bidi:isolate;direction:ltr;background:var(--chip);color:var(--chip-text);border-radius:999px;padding:1px 12px;font-size:.78rem;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace}

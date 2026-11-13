@@ -170,7 +170,6 @@
     return { type: 'school' };
   }
   /* ---------------- انتخاب ساعت (انتخاب‌گر ساده + دکمه‌های میان‌بر) ---------------- */
-  var TIME_QUICK = [[8, 0], [8, 30], [9, 0], [10, 0], [11, 0], [12, 0], [14, 0], [16, 0]];
   function dayPart(h) { return h < 5 ? 'بامداد' : h < 12 ? 'صبح' : h < 16 ? 'بعدازظهر' : h < 19 ? 'عصر' : 'شب'; }
   function timeSumText(hh, mm, dur) {
     var end = hh * 60 + mm + (dur || 0), eh = Math.floor(end / 60) % 24, em = end % 60;
@@ -183,13 +182,9 @@
     for (k = 0; k < 60; k += 5) mins.push(k);
     if (mins.indexOf(e.mm) < 0) { mins.push(e.mm); mins.sort(function (a, b) { return a - b; }); }
     mins.forEach(function (v) { m += '<option value="' + v + '"' + (v === e.mm ? ' selected' : '') + '>' + toFa(pad2(v)) + '</option>'; });
-    var chips = TIME_QUICK.map(function (t) {
-      return '<button type="button" class="adm-tchip" data-act="tset" data-h="' + t[0] + '" data-m="' + t[1] + '">' + toFa(pad2(t[0]) + ':' + pad2(t[1])) + '</button>';
-    }).join('');
     return '<div class="adm-field adm-timefield"><span>ساعت شروع</span>' +
       '<div class="adm-time" dir="ltr"><select class="adm-in adm-th" aria-label="ساعت">' + h + '</select>' +
       '<b>:</b><select class="adm-in adm-tm" aria-label="دقیقه">' + m + '</select></div>' +
-      '<div class="adm-tchips">' + chips + '</div>' +
       '<div class="adm-timesum">' + timeSumText(e.hh, e.mm, e.duration) + '</div></div>';
   }
   function updateTimeSum(card) {
@@ -253,6 +248,7 @@
       PA.serverExams = {}; PA.exams.forEach(function (e) { PA.serverExams[e.id] = true; });
       PA.students = arr(r[2]);
       PA.delExams = []; PA.delFiles = []; PA.dirty = false; PA.stuForm = null; PA.lastResults = {};
+      PA.stuFilter = { cls: '', q: '' }; var se0 = $('admStuSearch'); if (se0) se0.value = '';
       PA.ready = true;
       setState('', false);
       PA.renderAll();
@@ -271,9 +267,35 @@
   /* ============================================================
      تب ۱) دانش‌آموزان — ثبت فوری روی سرور (رمز سمت سرور هش می‌شود)
      ============================================================ */
+  /* انتخاب کلاس با دکمه‌های گروه‌بندی‌شده بر اساس پایه (به‌جای فهرست کشویی) */
+  function classChips(sel, act, withAll) {
+    var by = {}, h = '';
+    adminClassList().forEach(function (c) { (by[c.grade] = by[c.grade] || []).push(c); });
+    var cnt = {}; PA.students.forEach(function (x) { cnt[x.class_id] = (cnt[x.class_id] || 0) + 1; });
+    if (withAll) {
+      h += '<div class="adm-cgrp"><button type="button" class="adm-cchip' + (!sel ? ' on' : '') + '" data-act="' + act + '" data-cid="">همه کلاس‌ها <em>' + toFa(PA.students.length) + '</em></button></div>';
+    }
+    [7, 8, 9].forEach(function (g) {
+      if (!by[g]) return;
+      h += '<div class="adm-cgrp"><span class="adm-cgl">پایه ' + GRADE_NAMES[g] + '</span>' + by[g].map(function (c) {
+        return '<button type="button" class="adm-cchip' + (c.id === sel ? ' on' : '') + '" data-act="' + act + '" data-cid="' + escHTML(c.id) + '">' +
+          escHTML(c.name) + (withAll ? ' <em>' + toFa(cnt[c.id] || 0) + '</em>' : '') + '</button>';
+      }).join('') + '</div>';
+    });
+    return h;
+  }
+  function classPicker(sel) {
+    return '<div class="adm-field" style="margin-top:10px"><span>کلاس</span><div class="adm-cpick">' +
+      '<input type="hidden" class="sf-class" value="' + escHTML(sel) + '">' + classChips(sel, 'cpick', false) + '</div></div>';
+  }
+  function stuEmpty() {
+    if (!PA.students.length) return '<div class="adm-empty">هنوز دانش‌آموزی ثبت نشده است. با «افزودن دانش‌آموز» یا «افزودن گروهی» شروع کنید.</div>';
+    return '<div class="adm-empty">با فیلتر فعلی دانش‌آموزی پیدا نشد (' + toFa(PA.students.length) + ' دانش‌آموز ثبت شده است).<br>' +
+      '<button type="button" class="btn btn-primary" style="margin-top:12px" data-act="cclear">نمایش همهٔ دانش‌آموزان</button></div>';
+  }
   function stuRow(s) {
     var c = clsOf(s.class_id);
-    return '<div class="adm-stu-row" data-id="' + escHTML(s.id) + '">' +
+    return '<div class="adm-stu-row" data-id="' + escHTML(s.id) + '" data-nid="' + escHTML(s.national_id) + '">' +
       '<div class="adm-stu-info"><b>' + escHTML(s.name) + '</b><span dir="ltr">' + toFa(s.national_id) + '</span></div>' +
       '<span class="adm-pill' + (c ? '' : ' warn') + '">' + (c ? escHTML(c.name) : 'کلاس حذف‌شده') + '</span>' +
       '<div class="adm-stu-btns">' +
@@ -290,7 +312,7 @@
     if (f.mode === 'bulk') {
       return '<div class="adm-card adm-stuform">' +
         '<div class="adm-card-head"><strong>افزودن گروهی دانش‌آموزان</strong></div>' +
-        '<label class="adm-field"><span>کلاس</span><select class="adm-in sf-class">' + adminClassOptions(defCls) + '</select></label>' +
+        classPicker(defCls) +
         '<label class="adm-field" style="margin-top:10px"><span>هر دانش‌آموز در یک خط: «نام و نام خانوادگی ، کد ملی ، رمز (اختیاری)»</span>' +
         '<textarea class="adm-in sf-bulk" rows="8" dir="auto" placeholder="علی رضایی ، 0012345678 ، 1234&#10;رضا احمدی ، 0098765432"></textarea></label>' +
         '<div class="adm-note" style="margin:10px 0 0"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>می‌توانید ستون‌های Excel را کپی و اینجا Paste کنید. اگر رمز نوشته نشود، رمز اولیه همان «کد ملی» است. دانش‌آموزی که کد ملی‌اش از قبل ثبت شده باشد، فقط نام و کلاسش به‌روز می‌شود (رمزش تغییر نمی‌کند).</span></div>' +
@@ -306,11 +328,11 @@
       '<div class="adm-row">' +
       '<label class="adm-field"><span>نام و نام خانوادگی</span><input class="adm-in sf-name" maxlength="60" value="' + escHTML(st.name || '') + '"></label>' +
       '<label class="adm-field"><span>کد ملی (نام کاربری)</span><input class="adm-in sf-nid" dir="ltr" inputmode="numeric" maxlength="10" value="' + escHTML(st.national_id || '') + '"></label>' +
-      '<label class="adm-field"><span>کلاس</span><select class="adm-in sf-class">' + adminClassOptions(st.class_id || defCls) + '</select></label>' +
       '<label class="adm-field"><span>' + (st.id ? 'رمز جدید (خالی = بدون تغییر)' : 'رمز عبور (خالی = همان کد ملی)') + '</span>' +
       '<input class="adm-in sf-pass" dir="ltr" maxlength="40" autocomplete="off" placeholder="••••••"></label>' +
-      '</div>' +
+      '</div>' + classPicker(st.class_id || defCls) +
       '<div class="adm-form-btns"><button type="button" class="btn btn-primary" data-act="ssave" data-id="' + escHTML(st.id || '') + '">ثبت</button>' +
+      (st.id ? '' : '<button type="button" class="btn btn-primary" data-act="ssave" data-id="" data-next="1">ثبت و افزودن بعدی</button>') +
       '<button type="button" class="btn btn-outline" data-act="scancel">انصراف</button></div></div>';
   }
   PA.renderStudents = function () {
@@ -320,13 +342,17 @@
       if (q && nf(s.name).indexOf(q) < 0 && String(s.national_id).indexOf(q) < 0) return false;
       return true;
     });
-    $('admStuClass').innerHTML = '<option value="">همه کلاس‌ها</option>' + adminClassOptions(f.cls);
-    $('admStuClass').value = f.cls;
+    $('admStuClass').innerHTML = classChips(f.cls, 'cfilter', true);
     $('admStuCount').textContent = toFa(PA.students.length) + ' دانش‌آموز' +
       (list.length !== PA.students.length ? ' — نمایش ' + toFa(list.length) : '');
     $('admStuForm').innerHTML = stuFormHTML();
     $('admStuList').innerHTML = list.length ? list.map(stuRow).join('') :
-      '<div class="adm-empty">' + (PA.students.length ? 'دانش‌آموزی با این مشخصات پیدا نشد.' : 'هنوز دانش‌آموزی ثبت نشده است. با «افزودن دانش‌آموز» یا «افزودن گروهی» شروع کنید.') + '</div>';
+      stuEmpty();
+    if (PA.flashNid) {   // دانش‌آموزی که همین الان ثبت شد: پیدا، برجسته و در دید
+      var fr = null; qsa('#admStuList .adm-stu-row').forEach(function (r) { if (r.getAttribute('data-nid') === PA.flashNid) fr = r; });
+      PA.flashNid = null;
+      if (fr) { fr.classList.add('adm-new'); if (!PA.stuForm) fr.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    }
   };
   function renderStuListOnly() {
     var f = PA.stuFilter, q = nf(nd(f.q));
@@ -337,7 +363,7 @@
     });
     $('admStuCount').textContent = toFa(PA.students.length) + ' دانش‌آموز' +
       (list.length !== PA.students.length ? ' — نمایش ' + toFa(list.length) : '');
-    $('admStuList').innerHTML = list.length ? list.map(stuRow).join('') : '<div class="adm-empty">دانش‌آموزی با این مشخصات پیدا نشد.</div>';
+    $('admStuList').innerHTML = list.length ? list.map(stuRow).join('') : stuEmpty();
   }
   function saveStudent(btn) {
     var box = $('admStuForm'), id = btn.getAttribute('data-id') || null;
@@ -352,9 +378,14 @@
       method: 'POST',
       body: JSON.stringify({ p_id: id, p_national_id: nid, p_name: name, p_class_id: cid, p_grade: gradeOfClass(cid), p_password: pass })
     }).then(function () {
-      PA.stuForm = null;
-      showToast(id ? 'اطلاعات دانش‌آموز ذخیره شد.' : 'دانش‌آموز اضافه شد.');
-      return loadStudents();
+      var next = !id && btn.getAttribute('data-next') === '1';
+      PA.stuForm = next ? { mode: 'add' } : null;
+      PA.stuFilter.cls = cid; PA.stuFilter.q = ''; PA.flashNid = nid;   // لیست روی کلاس همین دانش‌آموز می‌رود تا گم نشود
+      var se = $('admStuSearch'); if (se) se.value = '';
+      showToast((id ? 'ذخیره شد: ' : 'اضافه شد: ') + name + ' ← ' + clsName(cid));
+      return loadStudents().then(function () {
+        if (next) { var ni = $('admStuForm').querySelector('.sf-name'); if (ni) ni.focus(); }
+      });
     }).catch(function (e) { showToast(errMsg(e)); }).then(function () { btn.disabled = false; });
   }
   function parseBulk(text) {
@@ -387,6 +418,7 @@
     }).then(function (res) {
       var badAll = p.bad.concat(arr(res && res.bad));
       var msg = toFa(res.added) + ' نفر اضافه و ' + toFa(res.updated) + ' نفر به‌روز شد.';
+      PA.stuFilter.cls = cid; PA.stuFilter.q = ''; var se2 = $('admStuSearch'); if (se2) se2.value = '';
       loadStudents().then(function () {
         if (badAll.length) {
           PA.stuForm = { mode: 'bulk' }; PA.renderStudents();
@@ -438,8 +470,8 @@
     if (PA.adminsErr) { box.innerHTML = '<div class="adm-pstate err">' + escHTML(PA.adminsErr) + '</div>'; return; }
     box.innerHTML = PA.admins.length ? PA.admins.map(function (a) {
       return '<div class="adm-stu-row" data-aid="' + escHTML(a.id) + '">' +
-        '<div class="adm-stu-info"><b>' + escHTML(a.display_name || a.username) + '</b><span dir="ltr">' + escHTML(a.username) + '</span></div>' +
-        '<span class="adm-pill">' + (a.is_main ? 'مدیر اصلی' : 'مدیر') + '</span>' +
+        '<div class="adm-stu-info"><div class="adm-aline"><b>' + escHTML(a.display_name || a.username) + '</b>' +
+        '<span class="adm-uname" dir="ltr">' + escHTML(a.username) + '</span></div></div>' +
         '<div class="adm-stu-btns"><button type="button" class="adm-mini" data-act="apass">رمز جدید</button>' +
         (a.is_main ? '' : delBtn('adel', 'حذف مدیر')) + '</div></div>';
     }).join('') : '<div class="adm-empty">در حال دریافت فهرست مدیران…</div>';
@@ -896,18 +928,17 @@
       case 'scancel': PA.stuForm = null; PA.renderStudents(); break;
       case 'sedit': if (stu) { PA.stuForm = { mode: 'edit', id: stu.id }; PA.renderStudents(); $('admStuForm').scrollIntoView({ block: 'center' }); } break;
       case 'ssave': saveStudent(b); break;
+      case 'cpick': {
+        var wrap = b.closest('.adm-cpick');
+        qsa('.adm-cchip', wrap).forEach(function (x) { x.classList.toggle('on', x === b); });
+        wrap.querySelector('.sf-class').value = b.getAttribute('data-cid');
+        break;
+      }
+      case 'cclear': PA.stuFilter = { cls: '', q: '' }; { var se3 = $('admStuSearch'); if (se3) se3.value = ''; } PA.renderStudents(); break;
+      case 'cfilter': PA.stuFilter.cls = b.getAttribute('data-cid') || ''; PA.renderStudents(); break;
       case 'sbsave': saveBulk(b); break;
       case 'spass': if (stu) resetPassword(stu); break;
       case 'sdel': if (stu) deleteStudent(stu); break;
-
-      /* ساعت شروع آزمون: دکمه‌های میان‌بر */
-      case 'tset':
-        if (card) {
-          card.querySelector('.adm-th').value = b.getAttribute('data-h');
-          card.querySelector('.adm-tm').value = b.getAttribute('data-m');
-          updateTimeSum(card); PA.collect(); PA.dirty = true;
-        }
-        break;
 
       /* مدیران */
       case 'aadd': PA.admForm = true; PA.renderAdmins(); break;
@@ -988,7 +1019,6 @@
   function onChange(e) {
     e.stopPropagation();
     var t = e.target;
-    if (t.id === 'admStuClass') { PA.stuFilter.cls = t.value; renderStuListOnly(); return; }
     if (t.closest && t.closest('#atab-stu, #atab-adm')) return;
     var card = t.closest ? t.closest('.adm-card') : null;
     if (card && /\badm-(th|tm|exdur)\b/.test(t.className)) updateTimeSum(card);
