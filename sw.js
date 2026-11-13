@@ -1,9 +1,9 @@
 /* سرویس‌ورکر: بعد از اولین ورود، سایت روی گوشی ذخیره می‌شود و بدون اینترنت هم باز می‌شود.
    برای انتشار نسخه‌ی جدید، فقط شماره‌ی VERSION را عوض کن. */
-var VERSION = 'v12';
+var VERSION = 'v13';
 var STATIC = 'raisi-static-' + VERSION;
 var DATA = 'raisi-data-' + VERSION;
-var CORE = ['./', 'index.html', 'style.css?v=12', 'script.js?v=12', 'manifest.webmanifest', 'Vazir-Variable.woff2',
+var CORE = ['./', 'index.html', 'style.css?v=13', 'script.js?v=13', 'panel-admin.js?v=13', 'manifest.webmanifest', 'Vazir-Variable.woff2',
   'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 var CDN = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -48,6 +48,7 @@ self.addEventListener('fetch', function (e) {
 
   if (url.origin === location.origin) {
     if (url.pathname.indexOf('/sb/auth') === 0) return;          // ورود مدیر: بدون کش
+    if (url.pathname.indexOf('/sb/storage') === 0) return;       // فایل‌های منابع آموزشی: بدون کش (حجیم)
     if (url.pathname.indexOf('/sb/') === 0) {                    // داده‌ی سایت: اول اینترنت، بعد نسخه‌ی ذخیره‌شده
       e.respondWith(networkFirst(req, DATA));
       return;

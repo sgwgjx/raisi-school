@@ -4165,7 +4165,7 @@ function adminCaptcha(onOk) {
 })();
 
 /* ---------- ورود دانش‌آموز با کد ملی و رمز عبور (فوتر) ----------
-   فعلاً فقط اعتبارسنجی ظاهری انجام می‌شود؛ بررسی واقعی کد ملی/رمز را باید به سرور وصل کرد.
+   ورود با تابع student_login در Supabase بررسی می‌شود و توکن نشست در stuTok ذخیره می‌شود.
    بعد از ورود موفق، کاربر به صفحهٔ پنل دانش‌آموزی (STUDENT_PANEL_URL) منتقل می‌شود. */
 (function () {
   var STUDENT_PANEL_URL = 'panel.html';
@@ -4198,14 +4198,39 @@ function adminCaptcha(onOk) {
   gate.addEventListener('click', function (e) { if (e.target === gate) close(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gate.hidden) close(); });
   nid.addEventListener('input', function () { nid.value = norm(nid.value).replace(/\D/g, '').slice(0, 10); });
+  var busy = false;
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var n = norm(nid.value);
-    if (!n || !pw.value) return fail('کد ملی و رمز عبور را وارد کنید.');
-    if (!validNid(n)) return fail('کد ملی وارد شده معتبر نیست.');
-    try { sessionStorage.setItem('stuLogin', n); } catch (x) {}
-    close();
-    showToast('ورود انجام شد؛ در حال انتقال به پنل…');
-    setTimeout(function () { location.href = STUDENT_PANEL_URL; }, 700);
+    if (busy) return;
+    var n = norm(nid.value), p = norm(pw.value);
+    if (!n || !p) return fail('کد ملی و رمز عبور را وارد کنید.');
+    if (!/^\d{10}$/.test(n)) return fail('کد ملی باید ۱۰ رقم باشد.');
+    var remember = !!(document.getElementById('stuRemember') || {}).checked;
+    busy = true; err.hidden = true;
+    fetch(SB.url + '/rest/v1/rpc/student_login', {
+      method: 'POST',
+      headers: { 'apikey': SB.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_nid: n, p_pass: p, p_days: remember ? 30 : 1 })
+    }).then(function (r) {
+      return r.json().then(function (j) { return { st: r.status, j: j }; });
+    }).then(function (o) {
+      busy = false;
+      var j = o.j || {};
+      if (o.st === 404) return fail('سرویس ورود دانش‌آموز هنوز فعال نشده است؛ با مدیر تماس بگیرید.');
+      if (!j.ok) {
+        if (j.error === 'locked') return fail('تلاش‌های ناموفق زیاد بود؛ حدود ' + toFa(Math.ceil((j.retry_seconds || 600) / 60)) + ' دقیقه دیگر دوباره امتحان کنید.');
+        return fail('کد ملی یا رمز عبور اشتباه است.');
+      }
+      try {
+        sessionStorage.removeItem('stuTok'); localStorage.removeItem('stuTok');
+        (remember ? localStorage : sessionStorage).setItem('stuTok', j.token);
+      } catch (x) {}
+      close();
+      showToast('ورود انجام شد؛ در حال انتقال به پنل…');
+      setTimeout(function () { location.href = STUDENT_PANEL_URL; }, 500);
+    }).catch(function () {
+      busy = false;
+      fail('ارتباط با سرور برقرار نشد؛ اینترنت را بررسی کنید.');
+    });
   });
 })();

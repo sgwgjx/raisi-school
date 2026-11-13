@@ -102,6 +102,9 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
 .shade{display:none}
 @media(max-width:900px){.side{transform:translateX(100%)}.side.open{transform:none}.main{margin:0}#menuBtn{display:grid}.shade.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45}.page{padding:14px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.cal .d i.ex{background:var(--primary)}.cal .d i.hol{background:var(--danger)}.cal .d i.info{background:var(--accent)}
+.lg{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent-strong);flex-shrink:0}.lg.ex{background:var(--primary)}.lg.ev{background:var(--warn)}.lg.hol{background:var(--danger)}.lg.info{background:var(--accent)}
+.row .lg{margin-inline-start:auto}
 </style>
 </head>
 <body>
@@ -147,123 +150,166 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===== داده‌های فرضی — در آینده با API جایگزین شود ===== */
-const DB={
- student:{name:'',grade:'',cls:''},
- exams:[],
- q:[],
- sched:{'شنبه':[],'یکشنبه':[],'دوشنبه':[],'سه‌شنبه':[],'چهارشنبه':[]},
- res:[],
- SITE:'index.html',
- news:[],
- /* ===== کلاس‌های مجازی — لینک هر کلاس را در فیلد url بگذارید (مثلاً https://meet.google.com/abc-defg-hij) ===== */
- vcls:[
-  {p:'گوگل میت',url:''},
-  {p:'اسکای‌روم',url:''},
-  {p:'شاد',url:''}],
- events:[]};
+/* ===== پنل دانش‌آموزی — داده‌ها از Supabase (با توکن ورود دانش‌آموز) ===== */
+const SB={url:location.origin+'/sb',key:'sb_publishable_1jSLYdzfmthl8HqMckO2yw_-dPmfE8c'};
+const BUCKET='panel-files';
+const DB={student:{name:'',grade:'',cls:''},exams:[],sched:{'شنبه':[],'یکشنبه':[],'دوشنبه':[],'سه‌شنبه':[],'چهارشنبه':[]},res:[],vcls:[],events:[],site:{},news:[],SITE:'index.html'};
 const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه و اخبار','bell'],['prof','پروفایل','user'],['set','تنظیمات','gear']];
 const $=s=>document.querySelector(s);
 const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const dg=s=>String(s==null?'':s).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).trim();
 const J=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const GN={7:'هفتم',8:'هشتم',9:'نهم'};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ic=n=>`<svg class="ic"><use href="#${n}"/></svg>`;
-function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2200)}
+const pad=n=>String(n).padStart(2,'0');
+const okUrl=u=>/^https?:\/\//i.test(String(u||'').trim());
+const fileUrl=p=>/^https?:\/\//i.test(p)?p:SB.url+'/storage/v1/object/public/'+BUCKET+'/'+p;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2600)}
 function modal(h){$('#mbody').innerHTML=h+'<p style="margin-top:14px"><button class="btn btn-o" onclick="closeM()">بستن</button></p>';$('#modal').classList.add('open')}
 function closeM(){$('#modal').classList.remove('open')}
 $('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
 
-/* تاریخ شمسی */
+/* ---------- نشست و ارتباط با سرور ---------- */
+const tok=()=>{try{return sessionStorage.getItem('stuTok')||localStorage.getItem('stuTok')||''}catch(e){return''}};
+function tokClear(){try{sessionStorage.removeItem('stuTok');localStorage.removeItem('stuTok');Object.keys(localStorage).filter(k=>k.indexOf('ex:')===0).forEach(k=>localStorage.removeItem(k))}catch(e){}}
+function toLogin(){tokClear();location.replace(DB.SITE)}
+async function rpc(n,b){const r=await fetch(SB.url+'/rest/v1/rpc/'+n,{method:'POST',headers:{apikey:SB.key,'Content-Type':'application/json'},body:JSON.stringify(b||{})});if(!r.ok)throw new Error('http '+r.status);return r.json()}
+let SKEW=0,lastLoad=0;
+const nowMs=()=>Date.now()+SKEW;
+
+/* ---------- تاریخ شمسی ---------- */
 function g2j(gy,gm,gd){const g=[0,31,59,90,120,151,181,212,243,273,304,334],y=gm>2?gy+1:gy;let d=355666+365*gy+Math.floor((y+3)/4)-Math.floor((y+99)/100)+Math.floor((y+399)/400)+gd+g[gm-1],jy=-1595+33*Math.floor(d/12053);d%=12053;jy+=4*Math.floor(d/1461);d%=1461;if(d>365){jy+=Math.floor((d-1)/365);d=(d-1)%365}return[jy,d<186?1+Math.floor(d/31):7+Math.floor((d-186)/30),1+(d<186?d%31:(d-186)%30)]}
 const now=new Date(),TJ=g2j(now.getFullYear(),now.getMonth()+1,now.getDate());
 const mlen=(y,m)=>m<=6?31:m<=11?30:([1,5,9,13,17,22,26,30].includes(y%33)?30:29);
 const wdToday=(now.getDay()+1)%7; // شنبه=۰
-const jfmt=d=>fa(d[0])+'/'+fa(String(d[1]).padStart(2,'0'))+'/'+fa(String(d[2]).padStart(2,'0'));
-function firstWd(y,m){ // روز هفتهٔ اول ماه با شمارش از امروز
- let off=-(TJ[2]-1),cy=TJ[0],cm=TJ[1];
+const jfmt=d=>fa(d[0])+'/'+fa(pad(d[1]))+'/'+fa(pad(d[2]));
+function firstWd(y,m){let off=-(TJ[2]-1),cy=TJ[0],cm=TJ[1];
  while(cy>y||(cy===y&&cm>m)){cm--;if(cm<1){cm=12;cy--}off-=mlen(cy,cm)}
  while(cy<y||(cy===y&&cm<m)){off+=mlen(cy,cm);cm++;if(cm>12){cm=1;cy++}}
  return((wdToday+off)%7+7)%7}
+function tparts(ms){try{const o={};new Intl.DateTimeFormat('en-u-ca-persian-nu-latn',{timeZone:'Asia/Tehran',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(ms)).forEach(p=>o[p.type]=p.value);return{y:+o.year,m:+o.month,d:+o.day,hh:+o.hour,mm:+o.minute}}catch(e){const j=g2j(new Date(ms).getFullYear(),new Date(ms).getMonth()+1,new Date(ms).getDate());return{y:j[0],m:j[1],d:j[2],hh:new Date(ms).getHours(),mm:new Date(ms).getMinutes()}}}
+const hm=ms=>{const t=tparts(ms);return fa(pad(t.hh)+':'+pad(t.mm))};
 
-/* وضعیت */
-const S={page:'dash',cm:TJ[1],cy:TJ[0],ex:null,ts:null};
-const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const gpa=()=>avg(DB.grades.map(g=>g[1][g[1].length-1]));
+/* ---------- برنامه کلاسی (همان منطق سایت اصلی) ---------- */
+const DEF_GRID={7:[['ریاضی','علوم تجربی','فارسی','مطالعات اجتماعی'],['علوم تجربی','ریاضی','زبان انگلیسی','قرآن'],['فارسی','عربی','ریاضی','تربیت بدنی'],['مطالعات اجتماعی','پیام‌های آسمان','علوم تجربی','فارسی'],['نگارش','فرهنگ و هنر','زبان انگلیسی','کار و فناوری']],
+8:[['علوم تجربی','فارسی','ریاضی','عربی'],['ریاضی','مطالعات اجتماعی','علوم تجربی','قرآن'],['زبان انگلیسی','ریاضی','نگارش','تربیت بدنی'],['فارسی','کار و فناوری','پیام‌های آسمان','ریاضی'],['فرهنگ و هنر','مطالعات اجتماعی','زبان انگلیسی','علوم تجربی']],
+9:[['فارسی','ریاضی','مطالعات اجتماعی','علوم تجربی'],['عربی','ریاضی','زبان انگلیسی','پیام‌های آسمان'],['علوم تجربی','فارسی','تربیت بدنی','ریاضی'],['قرآن','مطالعات اجتماعی','کار و فناوری','زبان انگلیسی'],['ریاضی','فرهنگ و هنر','نگارش','علوم تجربی']]};
+const DEF_TEACH={'ریاضی':'محمد کریمی','علوم تجربی':'علی رضایی','فارسی':'حسین محمدی','نگارش':'رضا احمدی','مطالعات اجتماعی':'مهدی موسوی','عربی':'سید امیر حسینی','زبان انگلیسی':'کیان رستمی','قرآن':'ابوالفضل صادقی','پیام‌های آسمان':'جواد امینی','فرهنگ و هنر':'پیمان کاظمی','کار و فناوری':'بهنام نوری','تربیت بدنی':'فرهاد جهانی'};
+const DEF_CLASSES=[7,8,9].flatMap(g=>[1,2,3,4].map(k=>({id:g+'-'+k,name:GN[g]+' '+fa(k),grade:g})));
+const DAYS=['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه'];
+function classes(){const c=DB.site.classes;return Array.isArray(c)&&c.length?c:DEF_CLASSES}
+function myClass(){return classes().find(c=>c.id===DB.cid)||{id:DB.cid,name:DB.cid,grade:DB.grade}}
+function buildSched(){const s=DB.site,cls=myClass();let rows=Array.isArray(s.schedule)?s.schedule:null;
+ if(!rows){const grid=(s.weekGrid&&s.weekGrid[cls.grade])||DEF_GRID[cls.grade];if(grid){const same=classes().filter(c=>+c.grade===+cls.grade),sh=Math.max(0,same.findIndex(c=>c.id===cls.id));rows=grid.map((_,i)=>grid[(i+sh)%grid.length].slice())}}
+ rows=rows||[];const T={};if(Array.isArray(s.teachers)&&s.teachers.length)s.teachers.forEach(t=>{if(t.subject&&(!t.role||t.role==='teacher'))T[t.subject]=t.name});else Object.assign(T,DEF_TEACH);
+ const st=Array.isArray(s.schedTeachers)?s.schedTeachers:[];const out={};
+ DAYS.forEach((d,di)=>{out[d]=(rows[di]||[]).map((sub,pi)=>[sub,(st[pi]&&st[pi][di])||T[sub]||'—'])});DB.sched=out}
+
+/* ---------- ورود داده‌ها ---------- */
+const kindLbl=a=>!a||!a.type||a.type==='school'?'کل مدرسه':a.type==='grade'?'پایه '+fa(a.grade):'کلاس';
+const nkey=a=>{const t=dg(a.date),d=(t.match(/\d+/g)||[]).map(Number);let day=d[0]||0,y=d.find(n=>n>1300)||0,m=J.findIndex(x=>t.indexOf(x)>=0)+1;return y*10000+m*100+day};
+function apply(d){SKEW=Date.parse(d.now)-Date.now();lastLoad=Date.now();
+ DB.cid=d.student.class_id;DB.grade=d.student.grade;DB.site=d.site||{};
+ DB.student={name:d.student.name,grade:GN[d.student.grade]||'',cls:myClass().name};
+ DB.exams=(d.exams||[]).map(x=>{const st=Date.parse(x.start_at),dur=x.duration;return{id:x.id,t:x.title,kind:x.kind,type:x.kind==='online'?'آنلاین':'لینک بیرونی',start:st,dur,date:(t=>[t.y,t.m,t.d])(tparts(st)),desc:x.descr,url:x.url,submitted:!!x.submitted,started:!!x.started,score:x.score,stat:x.submitted?{c:x.correct,w:x.wrong,n:x.unanswered}:null,qn:x.qcount}});
+ DB.vcls=(d.vcls||[]).filter(v=>okUrl(v.url));DB.res=d.resources||[];DB.events=d.events||[];
+ const l=d.news||[];DB.news=l.map((a,i)=>[a,i]).sort((a,b)=>nkey(b[0])-nkey(a[0])||a[1]-b[1]).map(p=>({t:p[0].title||'',k:kindLbl(p[0].aud),d:p[0].date||'',x:p[0].text||''})).filter(n=>n.t);
+ buildSched()}
+async function reload(quiet){try{const d=await rpc('student_panel_data',{p_token:tok()});if(!d.ok){if(d.error==='auth')return toLogin();throw 0}apply(d);if(!S.ex&&!quiet)render();return true}catch(e){if(!quiet)toast('ارتباط با سرور برقرار نشد');return false}}
+
+/* ---------- وضعیت و ناوبری ---------- */
+const S={page:'dash',cm:TJ[1],cy:TJ[0],ex:null,ts:null,sd:null};
+const stOf=e=>e.submitted?'done':nowMs()<e.start?'upcoming':nowMs()<e.start+e.dur*60000?'open':'closed';
 const stCh=s=>({upcoming:'<span class="chip warn">در انتظار</span>',open:'<span class="chip ok">قابل شروع</span>',done:'<span class="chip">انجام‌شده</span>',closed:'<span class="chip bad">بسته شد</span>'}[s]);
-
-/* ناوبری */
 $('#nav').innerHTML=PAGES.map(p=>`<a data-p="${p[0]}" tabindex="0">${ic(p[2])}${p[1]}</a>`).join('');
 $('#nav').onclick=e=>{const a=e.target.closest('a');if(a)go(a.dataset.p)};
 $('#nav').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const a=e.target.closest('a');if(a){e.preventDefault();go(a.dataset.p)}}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();$('#pop').classList.remove('open')}});
-function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;endTimer();if(p==='news'){toSite('#announcements');return}S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
-function render(){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page));const t=PAGES.find(p=>p[0]===S.page);$('#title').textContent=t[1];$('#page').innerHTML=V[S.page]();exStore()}
+function go(p){if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است و زمان آن ادامه دارد؛ خارج می‌شوید؟'))return;if(S.ex&&!S.ex.done)endTimer();if(p==='news'){toSite('#announcements');return}S.ex=null;S.page=p;$('#pop').classList.remove('open');$('#side').classList.remove('open');$('#shade').classList.remove('open');render();scrollTo(0,0)}
+function render(){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page));const t=PAGES.find(p=>p[0]===S.page);$('#title').textContent=t[1];$('#page').innerHTML=V[S.page]()}
 
-/* صفحه‌ها */
+/* ---------- تقویم: رویدادها + آزمون‌ها ---------- */
+function calItems(){const m={},add=(y,mo,d,t,c)=>{const k=y*10000+mo*100+d;(m[k]=m[k]||[]).push({t,c})};
+ DB.events.forEach(e=>add(e.y,e.m,e.d,e.title,e.k||'ev'));
+ DB.exams.forEach(e=>{const t=tparts(e.start);add(t.y,t.m,t.d,e.t,'ex')});
+ (DB.site.exams||[]).forEach(x=>{let y=x.dateY,mo=x.dateM,d=x.dateD;if(!(y&&mo&&d)){const t=dg(x.date),r=t.match(/(\d+)\s+(\S+)\s+(\d{4})/);if(r){d=+r[1];mo=J.indexOf(r[2])+1;y=+r[3]}}if(y&&mo&&d)add(y,mo,d,'امتحان '+(x.subject||''),'ex')});return m}
+
+/* ---------- صفحه‌ها ---------- */
 const V={
-dash(){const d=DB.exams,up=d.filter(e=>e.st==='upcoming'||e.st==='open').length,dn=d.filter(e=>e.st==='done');
- return`<div class="grid g4">${[['file',up,'آزمون پیش رو'],['trophy',dn.length,'آزمون انجام‌شده']].map(s=>`<div class="card stat"><div class="si">${ic(s[0])}</div><div><b>${fa(s[1])}</b><span>${s[2]}</span></div></div>`).join('')}</div>
- <div class="card" style="margin-top:16px"><h2>اطلاعیه و اخبار</h2>${DB.news.length?DB.news.slice(0,3).map((n,i)=>`<div class="row"><div class="gr"><b>${esc(n.t)}</b><small>${n.d}</small></div><button class="btn btn-o" onclick="showNews(${i})">مشاهده</button></div>`).join(''):'<p class="empty">اطلاعیه‌ای وجود ندارد</p>'}</div>`},
-exams(){if(S.ex)return runner();
- return`<div class="card">${DB.exams.length?exRows(DB.exams):'<p class="empty">آزمونی ثبت نشده است</p>'}</div>`},
-cal(){const y=S.cy,m=S.cm,f=firstWd(y,m),n=mlen(y,m),isT=y===TJ[0]&&m===TJ[1];let c=['ش','ی','د','س','چ','پ','ج'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(f);
- for(let d=1;d<=n;d++){const ev=DB.events.filter(e=>e[0]===m&&e[1]===d&&y===1405).map(e=>`<i class="${e[3]}" title="${e[2]}">${e[2]}</i>`).join('');c+=`<div class="d ${isT&&d===TJ[2]?'today':''}">${fa(d)}${ev}</div>`}
- return`<div class="card"><div class="calh"><button class="btn btn-o navb" aria-label="ماه قبل" onclick="cm(-1)">${ic('chr')}</button><h2>${J[m-1]} ${fa(y)}</h2><button class="btn btn-o navb" aria-label="ماه بعد" onclick="cm(1)">${ic('chl')}</button></div><div class="cal">${c}</div></div>`},
-sched(){const dm={6:'شنبه',0:'یکشنبه',1:'دوشنبه',2:'سه‌شنبه',3:'چهارشنبه'},days=Object.keys(DB.sched),bn=['اول','دوم','سوم','چهارم','پنجم','ششم'];if(!S.sd)S.sd=dm[new Date().getDay()]||days[0];const r=DB.sched[S.sd]||[];
- return`<div class="card"><h2 class="sh">${ic('cal')} برنامه کلاسی هفتگی</h2><div class="dtabs">${days.map(d=>`<button class="${d===S.sd?'on':''}" onclick="S.sd='${d}';render()">${d}</button>`).join('')}</div><div class="bells">${r.map((x,i)=>`<div class="bl"><span class="bn">زنگ ${bn[i]}</span><div class="gr"><b>${x[0]}</b><small>${x[1]||'—'}</small></div></div>`).join('')||'<p style="text-align:center;color:var(--text-light)">برنامه‌ای ثبت نشده است</p>'}</div></div>`},
-res(){if(!DB.res.length)return'<div class="card"><p class="empty">منبع آموزشی ثبت نشده است</p></div>';return`<div class="grid g4">${DB.res.map(r=>`<div class="card"><span class="chip">${r[1]}</span><h3 style="margin-top:8px">${r[0]}</h3><small style="color:var(--text-light)">${r[2]}</small><p style="margin-top:8px"><button class="btn btn-o" onclick="toast('فایل متصل نیست')">${ic('dl')} ${r[1]==='ویدئو'?'پخش':'دریافت'}</button></p></div>`).join('')}</div>`},
-vcls(){return`<div class="grid vgrid">${DB.vcls.map((v,i)=>`<div class="card vc"><div class="vci">${ic('vcr')}</div><div class="vcb"><span class="chip">${esc(v.p)}</span></div><button class="btn btn-p" onclick="joinV(${i})">${ic('vcr')} ورود به کلاس</button></div>`).join('')}</div>`},
-news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><div class="gr"><b>${esc(n.t)}</b><small>${n.k} · ${n.d}</small><p class="nsn">${esc(n.x.length>70?n.x.slice(0,70).trim()+'… ':n.x)}${n.x.length>70?`<a href="#" class="more" onclick="showNews(${i});event.stopPropagation();return false">بیشتر...</a>`:''}</p></div></div>`).join('')}</div>`},
+dash(){const d=DB.exams,up=d.filter(e=>{const s=stOf(e);return s==='upcoming'||s==='open'}).length,dn=d.filter(e=>e.submitted).length,td=DAYS[wdToday]?DB.sched[DAYS[wdToday]]||[]:[];
+ return`<div class="grid g4">${[['file',up,'آزمون پیش رو'],['trophy',dn,'آزمون انجام‌شده'],['book',DB.res.length,'منبع آموزشی']].map(s=>`<div class="card stat"><div class="si">${ic(s[0])}</div><div><b>${fa(s[1])}</b><span>${s[2]}</span></div></div>`).join('')}</div>
+ <div class="grid g2" style="margin-top:16px"><div class="card"><h2>برنامه امروز${DAYS[wdToday]?' ('+DAYS[wdToday]+')':''}</h2>${td.length?td.map((x,i)=>`<div class="row"><span class="bn">زنگ ${['اول','دوم','سوم','چهارم','پنجم','ششم'][i]}</span><div class="gr"><b>${esc(x[0])}</b><small>${esc(x[1])}</small></div></div>`).join(''):'<p class="empty">امروز کلاسی ندارید</p>'}</div>
+ <div class="card"><h2>اطلاعیه و اخبار</h2>${DB.news.length?DB.news.slice(0,3).map((n,i)=>`<div class="row"><div class="gr"><b>${esc(n.t)}</b><small>${esc(n.d)}</small></div><button class="btn btn-o" onclick="showNews(${i})">مشاهده</button></div>`).join(''):'<p class="empty">اطلاعیه‌ای وجود ندارد</p>'}</div></div>`},
+exams(){if(S.ex)return runner();return`<div class="card">${DB.exams.length?exRows(DB.exams):'<p class="empty">آزمونی برای شما ثبت نشده است</p>'}</div>`},
+cal(){const y=S.cy,m=S.cm,f=firstWd(y,m),n=mlen(y,m),isT=y===TJ[0]&&m===TJ[1],it=calItems();let c=['ش','ی','د','س','چ','پ','ج'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(f),list='';
+ for(let d=1;d<=n;d++){const ev=it[y*10000+m*100+d]||[];ev.forEach(e=>list+=`<div class="row"><span class="chip">${fa(d)} ${J[m-1]}</span><div class="gr"><b>${esc(e.t)}</b></div><i class="lg ${e.c}"></i></div>`);c+=`<div class="d ${isT&&d===TJ[2]?'today':''}">${fa(d)}${ev.slice(0,3).map(e=>`<i class="${e.c}" title="${esc(e.t)}">${esc(e.t)}</i>`).join('')}</div>`}
+ return`<div class="card"><div class="calh"><button class="btn btn-o navb" aria-label="ماه قبل" onclick="cm(-1)">${ic('chr')}</button><h2>${J[m-1]} ${fa(y)}</h2><button class="btn btn-o navb" aria-label="ماه بعد" onclick="cm(1)">${ic('chl')}</button></div><div class="cal">${c}</div></div>
+ <div class="card" style="margin-top:16px"><h3>رویدادهای ${J[m-1]}</h3>${list||'<p class="empty">رویدادی برای این ماه ثبت نشده است</p>'}<div class="dl" style="margin-top:10px"><span><i class="lg ex"></i>آزمون</span><span><i class="lg ev"></i>رویداد</span><span><i class="lg info"></i>اطلاعیه</span><span><i class="lg hol"></i>تعطیلی</span></div></div>`},
+sched(){const days=Object.keys(DB.sched),bn=['اول','دوم','سوم','چهارم','پنجم','ششم'];if(!S.sd)S.sd=DAYS[wdToday]||days[0];const r=DB.sched[S.sd]||[];
+ return`<div class="card"><h2 class="sh">${ic('cal')} برنامه کلاسی هفتگی — ${esc(DB.student.cls)}</h2><div class="dtabs">${days.map(d=>`<button class="${d===S.sd?'on':''}" onclick="S.sd='${d}';render()">${d}</button>`).join('')}</div><div class="bells">${r.map((x,i)=>`<div class="bl"><span class="bn">زنگ ${bn[i]}</span><div class="gr"><b>${esc(x[0])}</b><small>${esc(x[1]||'—')}</small></div></div>`).join('')||'<p style="text-align:center;color:var(--text-light);padding:14px">برنامه‌ای ثبت نشده است</p>'}</div></div>`},
+res(){if(!DB.res.length)return'<div class="card"><p class="empty">منبع آموزشی ثبت نشده است</p></div>';
+ return`<div class="grid g4">${DB.res.map(r=>{const file=!!r.path,href=file?fileUrl(r.path):(okUrl(r.url)?r.url:'#'),vid=r.kind==='ویدئو';return`<div class="card"><span class="chip">${esc(r.kind||'منبع')}</span><h3 style="margin-top:8px">${esc(r.title)}</h3><small style="color:var(--text-light)">${esc(r.subject||'')}${file&&r.size?' · '+fa((r.size/1048576).toFixed(1))+' مگابایت':''}</small><p style="margin-top:8px"><a class="btn btn-o" href="${esc(href)}" target="_blank" rel="noopener"${file&&!vid?` download="${esc(r.fileName||'')}"`:''}>${ic('dl')} ${vid||!file?'مشاهده':'دریافت'}</a></p></div>`}).join('')}</div>`},
+vcls(){if(!DB.vcls.length)return'<div class="card"><p class="empty">هنوز کلاس مجازی‌ای برای شما ثبت نشده است</p></div>';
+ return`<div class="grid vgrid">${DB.vcls.map((v,i)=>`<div class="card vc"><div class="vci">${ic('vcr')}</div><div class="vcb"><h3>${esc(v.p)}</h3></div><button class="btn btn-p" onclick="joinV(${i})">${ic('vcr')} ورود به کلاس</button></div>`).join('')}</div>`},
+news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><div class="gr"><b>${esc(n.t)}</b><small>${esc(n.k)} · ${esc(n.d)}</small></div></div>`).join('')}</div>`},
 prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${ic('user')}</div><div><h2 style="margin:0">${esc(s.name||'دانش‌آموز')}</h2>${s.grade||s.cls?`<span class="chip">${esc([s.grade,s.cls].filter(Boolean).join(' · '))}</span>`:''}</div></div>
  ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1]||'—')}</b></div>`).join('')}</div>`},
-set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" onclick="chgPw()">تغییر رمز</button></div>`}
+set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید (حداقل ۶ نویسه)</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" id="pwBtn" onclick="chgPw()">تغییر رمز</button></div>`}
 };
 
-/* نمودار SVG */
-function chart(v,l,line){const W=360,H=170,p=26,max=20,bw=(W-2*p)/v.length;let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><g stroke="var(--border)">${[0,5,10,15,20].map(t=>`<line x1="${p}" x2="${W-p}" y1="${H-p-(H-2*p)*t/max}" y2="${H-p-(H-2*p)*t/max}"/>`).join('')}</g>`;
- const pts=v.map((x,i)=>[p+bw*i+bw/2,H-p-(H-2*p)*x/max]);
- s+=line?`<polyline fill="none" stroke="var(--accent)" stroke-width="3" points="${pts.map(q=>q.join(',')).join(' ')}"/>`+pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="var(--accent-strong)"/>`).join(''):pts.map(q=>`<rect x="${q[0]-bw*.3}" y="${q[1]}" width="${bw*.6}" height="${H-p-q[1]}" rx="4" fill="var(--accent)"/>`).join('');
- return s+l.map((t,i)=>`<text x="${pts[i][0]}" y="${H-8}" font-size="9" text-anchor="middle" fill="var(--text-light)">${t}</text>`).join('')+'</svg>'}
-
-/* آزمون‌ها — ذخیرهٔ خودکار وضعیت + شمارش معکوس تا شروع */
-const SAVE_KEY='exSave',DONE_KEY='exDone';
-function exSave(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'null')}catch(e){return null}}
-function exStore(){if(!S.ex||S.ex.done)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify({id:S.ex.e.id,i:S.ex.i,a:S.ex.a,f:S.ex.f,left:S.ex.left}))}catch(e){}}
-function exClear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
-function doneLoad(){try{const o=JSON.parse(localStorage.getItem(DONE_KEY)||'{}');DB.exams.forEach(e=>{const v=o[e.id];if(v!==undefined){e.st='done';if(v&&typeof v==='object'){e.score=v.s;e.stat={c:v.c,w:v.w,n:v.n}}else e.score=v}})}catch(e){}}
-function doneStore(){try{const m={};DB.exams.forEach(e=>{if(e.st==='done'&&e.score!==undefined)m[e.id]=e.stat?{s:e.score,c:e.stat.c,w:e.stat.w,n:e.stat.n}:e.score});localStorage.setItem(DONE_KEY,JSON.stringify(m))}catch(e){}}
-/* شمارش معکوس زنده تا زمان شروع آزمون‌های پیش‌رو */
-const WHEN={};
-function jdate(j){const gy=j[0]+621;for(let off=-25;off<400;off++){const d=new Date(gy,2,off),J=g2j(d.getFullYear(),d.getMonth()+1,d.getDate());if(J[0]===j[0]&&J[1]===j[1]&&J[2]===j[2])return d}return null}
-function exWhen(e){if(WHEN[e.id]!==undefined)return WHEN[e.id];const d=jdate(e.date);if(!d)return WHEN[e.id]=null;const t=String(e.time).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)),p=t.split(':').map(Number);d.setHours(p[0]||0,p[1]||0,0,0);return WHEN[e.id]=d}
+/* ---------- آزمون‌ها ---------- */
 const cdTxt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s/3600),m=Math.floor(s/60);return d>0?fa(d)+' روز':h>0?fa(h)+' ساعت':m>0?fa(m)+' دقیقه':fa(s)+' ثانیه'};
-const endT=e=>{const p=String(e.time).replace(/[۰-۹]/g,ch=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(ch)).split(':').map(Number),m=(p[0]*60+(p[1]||0)+e.dur)%1440;return fa(String(Math.floor(m/60)).padStart(2,'0'))+':'+fa(String(m%60).padStart(2,'0'))};
-setInterval(()=>{let chg=false;DB.exams.forEach(e=>{const w=exWhen(e);if(e.st==='upcoming'){if(w&&Date.now()>=w.getTime()){e.st='open';chg=true}}else if(e.st==='open'&&w&&Date.now()>=w.getTime()+e.dur*60000){if(S.ex&&!S.ex.done&&S.ex.e.id===e.id)finish(true);else{e.st='closed';const sv=exSave();if(sv&&sv.id===e.id)exClear();chg=true}}});if(chg){if(!S.ex&&(S.page==='exams'||S.page==='dash'))render();return}if(S.page!=='exams'||S.ex)return;document.querySelectorAll('.cd[data-e]').forEach(el=>{const e=DB.exams.find(x=>String(x.id)===el.dataset.e);if(!e)return;const w=exWhen(e);if(!w)return;el.innerHTML=e.st==='upcoming'?'شروع تا <b>'+cdTxt(w-Date.now())+'</b>':'بسته تا <b>'+clk(Math.max(0,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)))+'</b>'})},1000);
-function exRows(l){const sv=exSave();return l.length?l.map(e=>{const ext=e.url!==undefined,resume=!ext&&sv&&sv.id===e.id&&e.st==='open',w=exWhen(e),live=w&&(e.st==='upcoming'||e.st==='open');
- const act=e.st==='done'?(e.score!==undefined?`<span class="chip ok">نمره ${fa(e.score)}</span>`:'')+(ext?'':`<button class="btn btn-o" onclick="showResult(${e.id})">نتیجه</button>`):e.st==='closed'?'':ext?(e.st==='open'?`<button class="btn btn-p" onclick="openExt(${e.id})">${ic('vcr')} ورود به آزمون</button>`:`<button class="btn btn-o" onclick="toast('این آزمون هنوز فعال نشده است')">در انتظار</button>`):resume?`<span class="chip warn">نیمه‌کاره</span><button class="btn btn-p" onclick="startEx(${e.id})">ادامه آزمون</button>`:e.st==='open'?`<button class="btn btn-p" onclick="startEx(${e.id})">شروع آزمون</button>`:`<button class="btn btn-o" onclick="toast('این آزمون هنوز فعال نشده است')">در انتظار</button>`;
- return`<div class="row"><div class="gr"><b>${e.t}</b> <span class="chip">${jfmt(e.date)}</span><small>${e.type} · ساعت ${e.time} تا ${endT(e)} · ${fa(e.dur)} دقیقه</small>${e.desc?`<p class="nsn">${esc(e.desc)}</p>`:''}${live?`<div class="cd" data-e="${e.id}">${e.st==='upcoming'?'شروع تا <b>'+cdTxt(w-Date.now())+'</b>':'بسته تا <b>'+clk(Math.max(0,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)))+'</b>'}</div>`:''}${resume?`<div class="cd">ادامه آزمون · ${fa(Object.keys(sv.a||{}).length)} پاسخ · ${sv.left!=null?`<b>${clk(sv.left)}</b> باقی‌مانده`:''}</div>`:''}</div>${stCh(e.st)}${act}</div>`}).join(''):''}
-function openExt(id){const e=DB.exams.find(x=>x.id===id),u=((e||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این آزمون هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
+const clk=s=>fa(pad(Math.floor(s/60))+':'+pad(s%60));
+const exKey=id=>'ex:'+id;
+function exLoad(id){try{return JSON.parse(localStorage.getItem(exKey(id))||'{}')}catch(e){return{}}}
+function exStore(){const x=S.ex;if(!x||x.done)return;try{localStorage.setItem(exKey(x.e.id),JSON.stringify({a:x.a}))}catch(e){}}
+function exClear(id){try{localStorage.removeItem(exKey(id))}catch(e){}}
+function cdHtml(e,st){const end=e.start+e.dur*60000;return st==='upcoming'?'شروع تا <b>'+cdTxt(e.start-nowMs())+'</b>':'بسته تا <b>'+clk(Math.max(0,Math.floor((end-nowMs())/1000)))+'</b>'}
+function exRows(l){return l.map(e=>{const st=stOf(e),live=st==='upcoming'||st==='open';let act='';
+ if(st==='done')act=`<span class="chip ok">نمره ${fa(e.score)}</span>${e.kind==='online'?`<button class="btn btn-o" onclick="showResult('${e.id}')">نتیجه</button>`:''}`;
+ else if(st==='open')act=e.kind==='link'?`<button class="btn btn-p" onclick="openExt('${e.id}')">${ic('vcr')} ورود به آزمون</button>`:`${e.started?'<span class="chip warn">نیمه‌کاره</span>':''}<button class="btn btn-p" onclick="startEx('${e.id}')">${e.started?'ادامه آزمون':'شروع آزمون'}</button>`;
+ else if(st==='upcoming')act=`<button class="btn btn-o" onclick="toast('این آزمون هنوز فعال نشده است')">در انتظار</button>`;
+ return`<div class="row"><div class="gr"><b>${esc(e.t)}</b> <span class="chip">${jfmt(e.date)}</span><small>${e.type} · ساعت ${hm(e.start)} تا ${hm(e.start+e.dur*60000)} · ${fa(e.dur)} دقیقه${e.kind==='online'&&e.qn?' · '+fa(e.qn)+' سؤال':''}</small>${e.desc?`<p class="nsn">${esc(e.desc)}</p>`:''}${live?`<div class="cd" data-e="${e.id}">${cdHtml(e,st)}</div>`:''}</div>${stCh(st)}${act}</div>`}).join('')}
+const prevSt={};
+setInterval(()=>{let chg=false,needUrl=false;DB.exams.forEach(e=>{const s=stOf(e);if(prevSt[e.id]!==undefined&&prevSt[e.id]!==s){chg=true;if(s==='open'&&e.kind==='link')needUrl=true}prevSt[e.id]=s});
+ if(needUrl)reload(true).then(()=>{if(!S.ex&&(S.page==='exams'||S.page==='dash'))render()});
+ if(chg&&!S.ex&&(S.page==='exams'||S.page==='dash')){render();return}
+ if(S.page!=='exams'||S.ex)return;document.querySelectorAll('.cd[data-e]').forEach(el=>{const e=DB.exams.find(x=>x.id===el.dataset.e);if(e)el.innerHTML=cdHtml(e,stOf(e))})},1000);
+function openExt(id){const e=DB.exams.find(x=>x.id===id);if(!e||!okUrl(e.url)){reload(true).then(()=>{const f=DB.exams.find(x=>x.id===id);if(f&&okUrl(f.url))window.open(f.url,'_blank','noopener,noreferrer');else toast('لینک آزمون در دسترس نیست؛ کمی بعد دوباره امتحان کنید')});return}window.open(e.url,'_blank','noopener,noreferrer')}
 function donut(t){const T=(t.c+t.w+t.n)||1,R=50,C=2*Math.PI*R;let off=0;const seg=[[t.c,'var(--ok)','درست'],[t.w,'var(--danger)','نادرست'],[t.n,'var(--warn)','بدون پاسخ']];
  const arcs=seg.filter(x=>x[0]>0).map(x=>{const len=x[0]/T*C,r=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${x[1]}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return r}).join('');
  return`<div class="dn"><svg viewBox="0 0 140 140" role="img" aria-label="نمودار پاسخ‌ها"><circle r="${R}" cx="70" cy="70" fill="none" stroke="var(--border)" stroke-width="22"/>${arcs}<text x="70" y="77" text-anchor="middle" font-size="20" font-weight="800" fill="var(--text)">${fa(Math.round(t.c/T*100))}٪</text></svg><div class="dl">${seg.map(x=>`<span><i style="background:${x[1]}"></i>${x[2]}: <b>${fa(x[0])}</b></span>`).join('')}</div></div>`}
-function showResult(id){const e=DB.exams.find(x=>x.id===id);if(!e)return;modal(`<h2 style="text-align:center">${esc(e.t)}</h2><p style="text-align:center">نمره: <b style="color:var(--ok);font-size:1.3rem">${fa(e.score)}</b> از ۲۰</p>${e.stat?donut(e.stat):'<p style="text-align:center;color:var(--text-light)">جزئیات پاسخ‌ها برای این آزمون موجود نیست</p>'}`)}
-function startEx(id){const e=DB.exams.find(x=>x.id===id),sv=exSave(),same=sv&&sv.id===id,r=same?sv:{i:0,a:{},f:{}},w=exWhen(e),cap=w?Math.max(1,Math.floor((w.getTime()+e.dur*60000-Date.now())/1000)):e.dur*60;S.ex={e,i:r.i||0,a:r.a||{},f:r.f||{},done:false,left:Math.min(same&&sv.left>0?sv.left:e.dur*60,cap)};S.page='exams';render();scrollTo(0,0);exStore();S.ts=setInterval(()=>{if(!S.ex||S.ex.done){endTimer();return}S.ex.left--;const t=$('#tm');if(t)t.textContent=clk(S.ex.left);if(S.ex.left<=0)finish(true);else exStore()},1000)}
-const clk=s=>fa(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'));
+function showResult(id){const e=DB.exams.find(x=>x.id===id);if(!e)return;modal(`<h2 style="text-align:center">${esc(e.t)}</h2><p style="text-align:center">نمره: <b style="color:var(--ok);font-size:1.3rem">${fa(e.score)}</b> از ۲۰</p>${e.stat?donut(e.stat):''}`)}
+async function startEx(id){const e=DB.exams.find(x=>x.id===id);if(!e)return;
+ try{const r=await rpc('student_exam_start',{p_token:tok(),p_exam_id:id});
+  if(!r.ok){if(r.error==='auth')return toLogin();toast({not_started:'هنوز زمان آزمون نرسیده است',closed:'زمان این آزمون تمام شده است',already:'این آزمون را قبلاً پایان داده‌اید',not_found:'این آزمون برای شما فعال نیست'}[r.error]||'امکان شروع آزمون نیست');reload();return}
+  const sv=exLoad(id);S.ex={e,qs:r.questions||[],a:sv.a||{},done:false,deadline:Date.now()+r.left*1000,left:r.left,tries:0};S.page='exams';render();scrollTo(0,0);exStore();
+  S.ts=setInterval(()=>{const x=S.ex;if(!x||x.done){endTimer();return}x.left=Math.max(0,Math.ceil((x.deadline-Date.now())/1000));const t=$('#tm');if(t)t.textContent=clk(x.left);if(x.left<=0)finish(true)},1000)}
+ catch(err){toast('ارتباط با سرور برقرار نشد؛ دوباره امتحان کنید')}}
 function endTimer(){clearInterval(S.ts);S.ts=null}
-function runner(){const x=S.ex,q=DB.q[x.i];
- if(x.done){const c=DB.q.filter((_,i)=>x.a[i]===DB.q[i].a).length;return`<div class="card" style="text-align:center"><h2>آزمون پایان یافت</h2><p style="font-size:2rem;font-weight:800;color:var(--accent-strong)">${fa(c)} از ${fa(DB.q.length)}</p><p>نمره: <b style="color:var(--ok)">${fa(x.e.score)}</b> از ۲۰</p>${x.e.stat?donut(x.e.stat):''}<p style="margin-top:16px"><button class="btn btn-p" onclick="S.ex=null;render()">بازگشت به آزمون‌ها</button></p></div>`}
- const N=DB.q.length,th=(document.querySelector('.top')||{}).offsetHeight||60;
- return`<div class="exhead" style="top:${th}px"><div class="gr"><b>${x.e.t}</b><small>پاسخ‌داده: <span id="cnt">${fa(Object.keys(x.a).length)}</span> از ${fa(N)}</small></div><span class="timer" id="tm">${clk(x.left)}</span></div>
- ${DB.q.map((q,n)=>`<div class="card qc ${x.f[n]?'flgd':''}" id="q${n}"><small style="color:var(--text-light)">سؤال ${fa(n+1)} از ${fa(N)}</small><div class="qrow"><h3 style="color:var(--text);font-size:1.05rem;margin:8px 0 0">${q.q}</h3>${q.img?`<img class="qimg" src="${esc(q.img)}" alt="تصویر سؤال" title="برای بزرگ‌نمایی لمس کنید" onclick="zoomQ(${n})">`:''}</div><div class="opts">${q.o.map((o,k)=>`<label class="${x.a[n]===k?'sel':''}"><input type="radio" name="o${n}" ${x.a[n]===k?'checked':''} onchange="pick(${n},${k})"> ${o}</label>`).join('')}</div></div>`).join('')}
+function qImg(q){return q.img?fileUrl(q.img):''}
+function runner(){const x=S.ex,N=x.qs.length;
+ if(x.done){const r=x.res;return`<div class="card" style="text-align:center"><h2>آزمون پایان یافت</h2>${r?`<p style="font-size:2rem;font-weight:800;color:var(--accent-strong)">${fa(r.c)} از ${fa(N)}</p><p>نمره: <b style="color:var(--ok)">${fa(r.score)}</b> از ۲۰</p>${donut({c:r.c,w:r.w,n:r.n})}`:'<p>زمان ثبت پاسخ‌ها گذشته بود و نتیجه‌ای ثبت نشد.</p>'}<p style="margin-top:16px"><button class="btn btn-p" onclick="S.ex=null;render()">بازگشت به آزمون‌ها</button></p></div>`}
+ const th=(document.querySelector('.top')||{}).offsetHeight||60;
+ return`<div class="exhead" style="top:${th}px"><div class="gr"><b>${esc(x.e.t)}</b><small>پاسخ‌داده: <span id="cnt">${fa(Object.keys(x.a).length)}</span> از ${fa(N)}</small></div><span class="timer" id="tm">${clk(x.left)}</span></div>
+ ${x.qs.map((q,n)=>`<div class="card qc" id="q${n}"><small style="color:var(--text-light)">سؤال ${fa(n+1)} از ${fa(N)}</small><div class="qrow"><h3 style="color:var(--text);font-size:1.05rem;margin:8px 0 0">${esc(q.q)}</h3>${q.img?`<img class="qimg" src="${esc(qImg(q))}" alt="تصویر سؤال" title="برای بزرگ‌نمایی لمس کنید" onclick="zoomQ(${n})">`:''}</div><div class="opts">${q.o.map((o,k)=>`<label class="${x.a[n]===k?'sel':''}"><input type="radio" name="o${n}" ${x.a[n]===k?'checked':''} onchange="pick(${n},${k})"> ${esc(o)}</label>`).join('')}</div></div>`).join('')}
  <div class="card"><button class="btn btn-p" style="width:100%" onclick="if(confirm('آزمون را پایان می‌دهید؟'))finish()">پایان آزمون</button></div>`}
 function pick(n,k){const x=S.ex;if(!x||x.done)return;x.a[n]=k;document.querySelectorAll('#q'+n+' .opts label').forEach((l,i)=>l.classList.toggle('sel',i===k));const c=$('#cnt');if(c)c.textContent=fa(Object.keys(x.a).length);exStore()}
-function finish(auto){if(!S.ex||S.ex.done)return;endTimer();const x=S.ex,c=DB.q.filter((_,i)=>x.a[i]===DB.q[i].a).length;const na=DB.q.length-Object.keys(x.a).length;x.done=true;x.e.st='done';x.e.score=+(c/DB.q.length*20).toFixed(1);x.e.stat={c,w:DB.q.length-c-na,n:na};doneStore();exClear();render();toast(auto?'زمان آزمون به پایان رسید و پاسخ‌ها به‌صورت خودکار ثبت شد':'نتیجه آزمون ثبت شد')}
+async function finish(auto){const x=S.ex;if(!x||x.done||x.sending)return;x.sending=true;endTimer();
+ try{const r=await rpc('student_exam_submit',{p_token:tok(),p_exam_id:x.e.id,p_answers:x.a});
+  if(!r.ok&&r.error==='auth')return toLogin();
+  if(!r.ok&&r.error!=='already'&&r.error!=='late')throw 0;
+  x.done=true;x.res=r.ok?r:null;exClear(x.e.id);await reload(true);render();toast(r.ok?(auto?'زمان آزمون تمام شد و پاسخ‌ها ثبت شد':'نتیجه آزمون ثبت شد'):'زمان ثبت پاسخ‌ها گذشته است')}
+ catch(err){x.sending=false;if(++x.tries<30){toast('ثبت پاسخ‌ها انجام نشد؛ اینترنت را بررسی کنید. دوباره تلاش می‌شود…');setTimeout(()=>finish(true),5000)}else toast('ثبت پاسخ‌ها ممکن نشد؛ دکمه «پایان آزمون» را بزنید')}}
 
-/* سایر تعاملات */
-function zoomQ(n){const u=(DB.q[n]||{}).img;if(!u)return;modal(`<img src="${esc(u)}" alt="تصویر سؤال" style="width:100%;height:auto;display:block;border-radius:8px">`)}
-function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!/^https?:\/\//i.test(u))return toast('لینک این کلاس هنوز ثبت نشده است');window.open(u,'_blank','noopener,noreferrer')}
+/* ---------- سایر ---------- */
+function zoomQ(n){const q=S.ex&&S.ex.qs[n];if(!q||!q.img)return;modal(`<img src="${esc(qImg(q))}" alt="تصویر سؤال" style="width:100%;height:auto;display:block;border-radius:8px">`)}
+function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!okUrl(u))return toast('لینک این کلاس معتبر نیست');window.open(u,'_blank','noopener,noreferrer')}
 function cm(d){S.cm+=d;if(S.cm>12){S.cm=1;S.cy++}if(S.cm<1){S.cm=12;S.cy--}render()}
-function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');o.value=a.value=b.value='';toast('نمایشی: رمز عبور با موفقیت تغییر کرد')}
+async function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');
+ try{const r=await rpc('student_change_password',{p_token:tok(),p_old:dg(o.value),p_new:dg(a.value)});
+  if(r.ok){o.value=a.value=b.value='';toast('رمز عبور با موفقیت تغییر کرد')}else if(r.error==='wrong_old')toast('رمز فعلی اشتباه است');else if(r.error==='auth')toLogin();else toast('تغییر رمز انجام نشد')}catch(e){toast('ارتباط با سرور برقرار نشد')}}
 function toSite(h){try{sessionStorage.setItem('fromPanel','1')}catch(e){}location.href=DB.SITE+h}
 function showNews(i){const n=DB.news[i];if(!n)return;toSite('#news='+encodeURIComponent(n.t))}
 $('#menuBtn').onclick=()=>{$('#side').classList.add('open');$('#shade').classList.add('open')};
@@ -271,20 +317,17 @@ $('#shade').onclick=()=>{$('#side').classList.remove('open');$('#shade').classLi
 $('#avBtn').onclick=()=>go('prof');
 $('#bellBtn').onclick=()=>{const p=$('#pop');p.innerHTML='<h3>اعلان‌ها</h3>'+(DB.news.length?'':'<p class="empty">اعلانی وجود ندارد</p>')+DB.news.slice(0,3).map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><small style="color:var(--text)">${esc(n.t)}</small></div>`).join('')+'<p style="margin-top:8px"><button class="btn btn-o" onclick="go(\'news\')">همه اطلاعیه‌ها</button></p>';p.classList.toggle('open');const d=document.querySelector('.dot');if(d)d.style.display='none'};
 document.addEventListener('click',e=>{const p=$('#pop');if(p.classList.contains('open')&&!e.target.closest('#bellBtn')&&!e.target.closest('#pop'))p.classList.remove('open')});
-doneLoad();
-$('#logoutBtn').onclick=()=>{if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است. پیشرفت شما ذخیره می‌شود؛ خارج می‌شوید؟'))return;try{sessionStorage.removeItem('stuLogin')}catch(e){}location.href=DB.SITE};
+$('#logoutBtn').onclick=()=>{if(S.ex&&!S.ex.done&&!confirm('آزمون در حال برگزاری است و زمان آن ادامه دارد؛ خارج می‌شوید؟'))return;const t=tok();rpc('student_logout',{p_token:t}).catch(()=>{});toLogin()};
 $('#logoutBtn').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#logoutBtn').click()}};
-/* اخبار از سایت اصلی (همان دادهٔ سرور سایت)؛ در صورت خطا همان نمونه‌های بالا می‌ماند */
-(function(){const SB={url:location.origin+'/sb',key:'sb_publishable_1jSLYdzfmthl8HqMckO2yw_-dPmfE8c'};
- const dg=s=>String(s||'').replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c));
- const key=a=>{const t=dg(a.date).trim(),d=(t.match(/\d+/g)||[]).map(Number);let day=d[0]||0,y=d[1]||0,m=J.findIndex(x=>t.indexOf(x)>=0)+1;if(!y){y=d.find(n=>n>1300)||0}return y*10000+m*100+day};
- const kind=a=>!a||a.type==='school'?'کل مدرسه':a.type==='grade'?'پایه '+fa(a.grade):'کلاس';
- fetch(SB.url+'/rest/v1/site_data?id=eq.main&select=data',{headers:{apikey:SB.key},cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(rows=>{
-  const l=rows&&rows[0]&&rows[0].data&&rows[0].data.announcements;if(!Array.isArray(l)||!l.length)return;
-  const idx=l.map((a,i)=>i).sort((a,b)=>key(l[b])-key(l[a])||a-b);
-  DB.news=idx.map(i=>({t:l[i].title||'',k:kind(l[i].aud),d:l[i].date||'',x:l[i].text||''})).filter(n=>n.t);
-  if(!S.ex&&(S.page==='dash'||S.page==='news'))render()}).catch(()=>{})})();
-render();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!S.ex&&Date.now()-lastLoad>60000)reload(true).then(()=>{if(!S.ex)render()})});
+
+/* ---------- شروع ---------- */
+(async function boot(){
+ if(!tok())return toLogin();
+ $('#page').innerHTML='<div class="card"><p class="empty">در حال دریافت اطلاعات…</p></div>';
+ try{const d=await rpc('student_panel_data',{p_token:tok()});if(!d.ok)return toLogin();apply(d);DB.exams.forEach(e=>prevSt[e.id]=stOf(e));render()}
+ catch(e){$('#page').innerHTML='<div class="card" style="text-align:center"><p class="empty">ارتباط با سرور برقرار نشد.</p><button class="btn btn-p" onclick="location.reload()">تلاش دوباره</button></div>'}
+})();
 </script>
 </body>
 </html>

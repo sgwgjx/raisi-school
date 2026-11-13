@@ -1513,3 +1513,36 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 @media (min-width:1081px){.menu-login-item{display:none!important}}
 .admin-gate-card .stu-in{letter-spacing:normal;margin-bottom:10px;direction:ltr}
 .admin-gate-card .stu-in::placeholder{direction:rtl}
+
+/* ===== پنل مدیریت: بخش‌های پنل دانش‌آموزی ===== */
+.adm-toolbar-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.adm-psave{padding:8px 18px}
+.adm-pstate{background:#fff3d6;color:#7a4e00;border-radius:8px;padding:10px 14px;font-size:.85rem;font-weight:700;margin-bottom:14px;line-height:1.8}
+.adm-pstate.err{background:#fde9ea;color:#a11d27}
+body.dark-mode .adm-pstate{background:rgba(138,90,0,.2);color:#ffd27a}
+body.dark-mode .adm-pstate.err{background:rgba(192,39,51,.16);color:#ffb3b8}
+.adm-pdel{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:#c02733;cursor:pointer;flex-shrink:0}
+.adm-pdel:hover{background:#fde9ea;border-color:#c02733}.adm-pdel .ic{width:16px;height:16px}
+.adm-mini{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);background:var(--surface-2);color:var(--accent);font:inherit;font-size:.82rem;font-weight:700;border-radius:8px;cursor:pointer}
+.adm-mini:hover{background:var(--chip)}.adm-mini .ic{width:14px;height:14px}
+.adm-empty{text-align:center;color:var(--text-light);padding:22px 0;font-size:.9rem}
+.adm-stu-filter{margin:0 0 12px;grid-template-columns:minmax(140px,220px) 1fr}
+.adm-stu-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:8px;flex-wrap:wrap}
+.adm-stu-info{flex:1;min-width:160px;display:flex;flex-direction:column;line-height:1.7}
+.adm-stu-info span{font-size:.8rem;color:var(--text-light)}
+.adm-stu-btns{display:flex;gap:6px;align-items:center}
+.adm-pill{background:var(--chip);color:var(--chip-text);border-radius:999px;padding:2px 12px;font-size:.78rem;font-weight:700}
+.adm-pill.warn{background:#fff3d6;color:#8a5a00}
+.adm-form-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.adm-q{border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--surface-2)}
+.adm-q-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.adm-q-opts{display:grid;gap:6px;margin-top:8px}
+.adm-qopt{display:flex;align-items:center;gap:8px}.adm-qopt input[type=radio]{width:18px;height:18px;flex-shrink:0;accent-color:var(--accent)}
+.adm-q-img{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.adm-qthumb{width:52px;height:52px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff}
+.adm-tablewrap{overflow-x:auto;margin-top:8px}
+.adm-restable{width:100%;border-collapse:collapse;font-size:.85rem}
+.adm-restable th{background:var(--primary,#15395f);color:#fff;padding:6px;text-align:center}
+.adm-restable td{padding:6px;text-align:center;border-bottom:1px solid var(--border)}
+.stu-remember{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-light);margin:2px 0 8px;cursor:pointer}
+.stu-remember input{width:16px;height:16px}
