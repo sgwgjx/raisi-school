@@ -45,7 +45,7 @@
 <!-- استایل Leaflet برای نقشه فوتر (اگر لود نشود، به‌صورت خودکار iframe جایگزین می‌شود) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 
 <body>
@@ -426,7 +426,7 @@
     <form id="stuGateForm" autocomplete="off" novalidate>
       <input type="text" id="stuNid" class="stu-in" inputmode="numeric" placeholder="کد ملی" aria-label="کد ملی" maxlength="10" autocomplete="username">
       <input type="password" id="stuPass" class="stu-in" placeholder="رمز عبور" aria-label="رمز عبور" maxlength="40" autocomplete="current-password">
-      <label class="stu-remember"><input type="checkbox" id="stuRemember"> مرا در این دستگاه نگه دار</label>
+      <label class="stu-remember"><input type="checkbox" id="stuRemember"> من را در این دستگاه به خاطر بسپار</label>
       <div class="admin-gate-actions">
         <button type="button" class="btn btn-outline" id="stuGateCancel">انصراف</button>
         <button type="submit" class="btn btn-primary">ورود</button>
@@ -792,7 +792,7 @@
     }
     booted = true;
     // فایل‌های برنامه به‌ترتیب (async=false یعنی اجرا دقیقاً با همین ترتیب)
-    var files = ['script.js?v=19', 'panel-admin.js?v=19'];
+    var files = ['script.js?v=22', 'panel-admin.js?v=22'];
     files.forEach(function (f, i) {
       var s = document.createElement('script');
       s.src = f;

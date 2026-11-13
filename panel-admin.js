@@ -24,7 +24,7 @@
     content: { vcls: [], resources: [], events: [] },
     exams: [], serverExams: {}, delExams: [], delFiles: [],
     students: [], stuFilter: { cls: '', q: '' }, stuForm: null,
-    lastResults: {}, admins: [], adminsErr: '', admForm: false
+    lastResults: {}, admins: [], adminsErr: '', admForm: false, studentsErr: ''
   };
 
   /* ---------------- ابزارهای کوچک ---------------- */
@@ -221,9 +221,11 @@
     };
   }
   function fromResource(r) {
+    var files = arr(r.files).filter(function (f) { return f && f.path; }).map(function (f) { return { path: f.path, fileName: f.fileName || '', size: f.size || 0 }; });
+    if (!files.length && r.path) files = [{ path: r.path, fileName: r.fileName || '', size: r.size || 0 }];
     return {
       id: r.id || uid(), title: r.title || '', kind: r.kind || 'جزوه', subject: r.subject || '',
-      mode: r.path ? 'file' : 'link', path: r.path || '', fileName: r.fileName || '', size: r.size || 0,
+      mode: files.length ? 'file' : 'link', files: files,
       url: r.url || '', aud: r.aud || { type: 'school' }
     };
   }
@@ -235,6 +237,7 @@
       apiJson('/rest/v1/panel_content?id=eq.main&select=data'),
       apiJson('/rest/v1/panel_exams?select=*&order=start_at.desc'),
       apiJson('/rest/v1/students?select=id,national_id,name,class_id,grade&order=grade.asc,class_id.asc,name.asc&limit=1000')
+        .then(function (rows) { PA.studentsErr = ''; return rows; }, function (e) { PA.studentsErr = errMsg(e); return null; })
     ]).then(function (r) {
       var c = (r[0] && r[0][0] && r[0][0].data) || {};
       PA.content = {
@@ -246,7 +249,7 @@
       };
       PA.exams = arr(r[1]).map(fromRow);
       PA.serverExams = {}; PA.exams.forEach(function (e) { PA.serverExams[e.id] = true; });
-      PA.students = arr(r[2]);
+      if (r[2]) PA.students = arr(r[2]);
       PA.delExams = []; PA.delFiles = []; PA.dirty = false; PA.stuForm = null; PA.lastResults = {};
       PA.stuFilter = { cls: '', q: '' }; var se0 = $('admStuSearch'); if (se0) se0.value = '';
       PA.ready = true;
@@ -261,7 +264,8 @@
 
   function loadStudents() {
     return apiJson('/rest/v1/students?select=id,national_id,name,class_id,grade&order=grade.asc,class_id.asc,name.asc&limit=1000')
-      .then(function (rows) { PA.students = arr(rows); PA.renderStudents(); });
+      .then(function (rows) { PA.students = arr(rows); PA.studentsErr = ''; PA.renderStudents(); })
+      .catch(function (e) { PA.studentsErr = errMsg(e); PA.renderStudents(); });
   }
 
   /* ============================================================
@@ -346,7 +350,10 @@
     $('admStuCount').textContent = toFa(PA.students.length) + ' دانش‌آموز' +
       (list.length !== PA.students.length ? ' — نمایش ' + toFa(list.length) : '');
     $('admStuForm').innerHTML = stuFormHTML();
-    $('admStuList').innerHTML = list.length ? list.map(stuRow).join('') :
+    if (PA.studentsErr) {
+      $('admStuList').innerHTML = '<div class="adm-pstate err">دریافت فهرست دانش‌آموزان انجام نشد: ' + escHTML(PA.studentsErr) + '<br>' +
+        '<button type="button" class="btn btn-primary" style="margin-top:10px" data-act="sretry">تلاش دوباره</button></div>';
+    } else $('admStuList').innerHTML = list.length ? list.map(stuRow).join('') :
       stuEmpty();
     if (PA.flashNid) {   // دانش‌آموزی که همین الان ثبت شد: پیدا، برجسته و در دید
       var fr = null; qsa('#admStuList .adm-stu-row').forEach(function (r) { if (r.getAttribute('data-nid') === PA.flashNid) fr = r; });
@@ -569,6 +576,7 @@
       e.hh = th ? (+th.value || 0) : 8; e.mm = tmn ? (+tmn.value || 0) : 0;
       e.duration = Math.max(1, Math.min(600, Number(val(card, '.adm-exdur')) || 30));
       e.descr = val(card, '.adm-exdesc').trim();
+      var kd = card.querySelector('.adm-exkind'); if (kd) e.kind = kd.value === 'link' ? 'link' : 'online';
       e.aud = readAud(card);
       var u = card.querySelector('.adm-exurl'); if (u) e.url = u.value.trim();
       if (card.querySelector('.adm-qlist')) {
@@ -664,10 +672,14 @@
   function resCard(r, i) {
     var file;
     if (r.mode === 'file') {
-      file = r._busy ? '<span class="adm-upname">در حال آپلود… (تا پایان صبر کنید)</span>' :
-        (r.path ? '<div class="adm-upname"><a href="' + escHTML(fileUrl(r.path)) + '" target="_blank" rel="noopener">' + icon('file') + ' ' + escHTML(r.fileName || 'فایل') + '</a> · ' + sizeTxt(r.size) + '</div>' : '') +
-          '<button type="button" class="adm-mini" data-act="rpick">' + icon('up') + (r.path ? ' جایگزینی فایل' : ' انتخاب و آپلود فایل') + '</button>' +
-          '<div class="adm-upname">فرمت‌های مجاز: PDF، Word، PowerPoint، Excel، عکس، MP4، MP3، ZIP — حداکثر ۵۰ مگابایت</div>';
+      var fl = r.files.map(function (f, k) {
+        return '<div class="adm-rfile" data-fi="' + k + '"><a href="' + escHTML(fileUrl(f.path)) + '" target="_blank" rel="noopener">' + icon('file') + ' ' + escHTML(f.fileName || 'فایل') + '</a>' +
+          '<span class="adm-upname">' + sizeTxt(f.size) + '</span>' + delBtn('rfdel', 'حذف این فایل') + '</div>';
+      }).join('');
+      file = '<div class="adm-rfiles">' + fl + '</div>' +
+        (r._busy ? '<span class="adm-upname">در حال آپلود… (تا پایان صبر کنید)</span>' :
+          '<button type="button" class="adm-mini" data-act="rpick">' + icon('up') + (r.files.length ? ' افزودن فایل دیگر' : ' انتخاب و آپلود فایل') + '</button>' +
+          '<div class="adm-upname">می‌توانید چند فایل را با هم انتخاب کنید. فرمت‌های مجاز: PDF، Word، PowerPoint، Excel، عکس، MP4، MP3، ZIP — هر فایل حداکثر ۵۰ مگابایت</div>');
     } else {
       file = '<label class="adm-field"><span>لینک منبع (آپارات، گوگل درایو، سایت...)</span><input class="adm-in adm-rurl" dir="ltr" value="' + escHTML(r.url) + '" placeholder="https://..."></label>';
     }
@@ -743,7 +755,7 @@
     for (i = 0; i < PA.content.resources.length; i++) {
       r = PA.content.resources[i];
       if (!r.title) return { tab: 'res', msg: 'عنوان منبع شمارهٔ ' + toFa(i + 1) + ' را بنویسید.' };
-      if (r.mode === 'file' && !r.path) return { tab: 'res', msg: 'برای «' + r.title + '» فایلی آپلود نشده است (یا نوع را «لینک» کنید).' };
+      if (r.mode === 'file' && !r.files.length) return { tab: 'res', msg: 'برای «' + r.title + '» فایلی آپلود نشده است (یا نوع را «لینک» کنید).' };
       if (r.mode === 'link' && !isUrl(r.url)) return { tab: 'res', msg: 'لینک «' + r.title + '» باید با https:// شروع شود.' };
     }
     for (i = 0; i < PA.content.events.length; i++) {
@@ -776,7 +788,10 @@
       vcls: PA.content.vcls.map(function (v) { return { id: v.id, p: v.p, url: v.url, aud: v.aud }; }),
       resources: PA.content.resources.map(function (r) {
         var o = { id: r.id, title: r.title, kind: r.kind, subject: r.subject || '', aud: r.aud };
-        if (r.mode === 'file') { o.path = r.path; o.fileName = r.fileName; o.size = r.size; } else { o.url = r.url; }
+        if (r.mode === 'file') {
+          o.files = r.files.map(function (f) { return { path: f.path, fileName: f.fileName, size: f.size }; });
+          o.path = r.files[0].path; o.fileName = r.files[0].fileName; o.size = r.files[0].size;   // سازگاری با نسخهٔ قدیمی
+        } else { o.url = r.url; }
         return o;
       }),
       events: ev.map(function (x) { return { id: x.id, y: x.y, m: x.m, d: x.d, title: x.title, k: x.k, aud: x.aud }; })
@@ -801,7 +816,7 @@
 
     // منابعی که از حالت «فایل» به «لینک» رفته‌اند → فایلشان پاک می‌شود
     PA.content.resources.forEach(function (r) {
-      if (r.mode === 'link' && r.path) { PA.delFiles.push(r.path); r.path = ''; r.fileName = ''; r.size = 0; }
+      if (r.mode === 'link' && r.files.length) { r.files.forEach(function (f) { PA.delFiles.push(f.path); }); r.files = []; }
     });
     var content = buildContent();
     var rows = PA.exams.map(examRow);
@@ -841,7 +856,7 @@
       PA.delExams = []; PA.delFiles = [];
       PA.serverExams = {}; PA.exams.forEach(function (e) { PA.serverExams[e.id] = true; });
       PA.dirty = false;
-      PA.renderExams(); PA.renderRes();
+      PA.renderExams(); PA.renderRes(); loadStudents();
       showToast('تغییرات پنل دانش‌آموزی ذخیره شد.');
       return true;
     }).catch(function (e) {
@@ -858,6 +873,7 @@
     job = { kind: kind, i: i, j: j };
     var inp = $('admPanelFile');
     inp.accept = kind === 'qimg' ? 'image/*' : '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,image/*,video/mp4,video/webm,audio/mpeg,audio/mp4';
+    inp.multiple = kind === 'res';
     inp.value = '';
     inp.click();
   }
@@ -878,37 +894,41 @@
     });
   }
   function onFilePicked() {
-    var inp = $('admPanelFile'), f = inp.files && inp.files[0];
-    if (!f || !job) return;
+    var inp = $('admPanelFile'), list = Array.prototype.slice.call(inp.files || []);
+    if (!list.length || !job) return;
     var jb = job; job = null;
     var isImg = jb.kind === 'qimg';
-    if (!(isImg ? IMG_EXT : FILE_EXT).test(f.name)) return showToast('این نوع فایل مجاز نیست.');
-    if (f.size > (isImg ? MAX_IMG : MAX_FILE)) {
-      return showToast(isImg ? 'حجم عکس سؤال نباید بیشتر از ۵ مگابایت باشد.' :
-        'حجم فایل بیشتر از ۵۰ مگابایت است؛ آن را در آپارات یا درایو بگذارید و «لینک» را ثبت کنید.');
-    }
+    if (isImg) list = list.slice(0, 1);
+    var ok = [], skipped = [];
+    list.forEach(function (f) {
+      if (!(isImg ? IMG_EXT : FILE_EXT).test(f.name)) skipped.push(f.name + ' (نوع نامجاز)');
+      else if (f.size > (isImg ? MAX_IMG : MAX_FILE)) skipped.push(f.name + (isImg ? ' (بیش از ۵ مگابایت)' : ' (بیش از ۵۰ مگابایت؛ به‌جایش «لینک» بگذارید)'));
+      else ok.push(f);
+    });
+    if (skipped.length) showToast('این فایل‌ها آپلود نشدند: ' + skipped.join('، '));
+    if (!ok.length) return;
     PA.collect();
     var target = isImg ? (PA.exams[jb.i] && PA.exams[jb.i].questions[jb.j]) : PA.content.resources[jb.i];
     if (!target) return;
     target._busy = true; PA.uploading++;
     if (isImg) PA.renderExams(); else PA.renderRes();
-    showToast('در حال آپلود «' + f.name + '»…');
-    uploadFile(f, isImg ? 'q' : 'res').then(function (path) {
-      if (isImg) { if (target.img) PA.delFiles.push(target.img); target.img = path; }
-      else { if (target.path) PA.delFiles.push(target.path); target.path = path; target.fileName = f.name; target.size = f.size; }
-      PA.dirty = true;
-      showToast('فایل آپلود شد؛ برای ثبت نهایی «ذخیره» را بزنید.');
-    }).catch(function (e) { showToast('آپلود انجام نشد. ' + errMsg(e)); })
-      .then(function () {
-        target._busy = false; PA.uploading--;
-        PA.collect();
-        if (isImg) PA.renderExams(); else PA.renderRes();
+    var done = 0;
+    ok.reduce(function (p, f) {
+      return p.then(function () {
+        showToast('در حال آپلود «' + f.name + '»… (' + toFa(done + 1) + ' از ' + toFa(ok.length) + ')');
+        return uploadFile(f, isImg ? 'q' : 'res').then(function (path) {
+          if (isImg) { if (target.img) PA.delFiles.push(target.img); target.img = path; }
+          else { target.files.push({ path: path, fileName: f.name, size: f.size }); }
+          done++; PA.dirty = true;
+        }).catch(function (e) { showToast('آپلود «' + f.name + '» انجام نشد. ' + errMsg(e)); });
       });
+    }, Promise.resolve()).then(function () {
+      if (done) showToast((done === ok.length ? toFa(done) + ' فایل آپلود شد' : toFa(done) + ' از ' + toFa(ok.length) + ' فایل آپلود شد') + '؛ برای ثبت نهایی «ذخیره» را بزنید.');
+      target._busy = false; PA.uploading--;
+      PA.collect();
+      if (isImg) PA.renderExams(); else PA.renderRes();
+    });
   }
-
-  /* ============================================================
-     رویدادها
-     ============================================================ */
   function onClick(e) {
     var b = e.target.closest ? e.target.closest('[data-act]') : null;
     if (!b) return;
@@ -934,6 +954,7 @@
         wrap.querySelector('.sf-class').value = b.getAttribute('data-cid');
         break;
       }
+      case 'sretry': loadStudents(); break;
       case 'cclear': PA.stuFilter = { cls: '', q: '' }; { var se3 = $('admStuSearch'); if (se3) se3.value = ''; } PA.renderStudents(); break;
       case 'cfilter': PA.stuFilter.cls = b.getAttribute('data-cid') || ''; PA.renderStudents(); break;
       case 'sbsave': saveBulk(b); break;
@@ -986,14 +1007,21 @@
 
       /* منابع */
       case 'radd':
-        PA.collect(); PA.content.resources.unshift({ id: uid(), title: '', kind: 'جزوه', subject: '', mode: 'file', path: '', fileName: '', size: 0, url: '', aud: { type: 'school' } });
+        PA.collect(); PA.content.resources.unshift({ id: uid(), title: '', kind: 'جزوه', subject: '', mode: 'file', files: [], url: '', aud: { type: 'school' } });
         PA.renderRes(); PA.dirty = true; adminScrollTop(); break;
       case 'rdel':
         if (!window.confirm('این منبع حذف شود؟ (فایل آن هم از سرور پاک می‌شود)')) break;
         PA.collect();
-        if (PA.content.resources[i] && PA.content.resources[i].path) PA.delFiles.push(PA.content.resources[i].path);
+        if (PA.content.resources[i]) PA.content.resources[i].files.forEach(function (f) { PA.delFiles.push(f.path); });
         PA.content.resources.splice(i, 1); PA.renderRes(); PA.dirty = true; break;
       case 'rpick': pickFile('res', i); break;
+      case 'rfdel': {
+        var fr0 = b.closest('[data-fi]'), fi = fr0 ? Number(fr0.getAttribute('data-fi')) : -1, rr = PA.content.resources[i];
+        if (!rr || !rr.files[fi]) break;
+        if (!window.confirm('فایل «' + (rr.files[fi].fileName || 'فایل') + '» حذف شود؟')) break;
+        PA.collect(); PA.delFiles.push(rr.files[fi].path); rr.files.splice(fi, 1);
+        PA.renderRes(); PA.dirty = true; break;
+      }
 
       /* تقویم */
       case 'padd':
@@ -1030,7 +1058,11 @@
       var aw = t.closest('.adm-audwrap'); if (aw) aw.setAttribute('data-mode', t.value);
     }
     PA.collect(); PA.dirty = true;
-    if (t.classList.contains('adm-exkind')) PA.renderExams();      // نوع آزمون عوض شد: بخش سؤال/لینک
+    if (t.classList.contains('adm-exkind')) {                      // نوع آزمون عوض شد: بخش سؤال/لینک
+      var xe = card ? PA.exams[+card.getAttribute('data-i')] : null;
+      if (xe && xe.kind === 'online' && !xe.questions.length) xe.questions.push(normQ({}));
+      PA.renderExams();
+    }
     if (t.classList.contains('adm-rmode')) PA.renderRes();         // فایل ↔ لینک
   }
 
@@ -1057,7 +1089,9 @@
       s.addEventListener('input', onInput);
       s.addEventListener('change', onChange);
       var b = document.querySelector('.admin-tabs button[data-atab="' + n + '"]');
-      if (b) b.addEventListener('click', function () { if (PA.ready) { PA.collect(); PA.renderAll(); } });
+      if (b) b.addEventListener('click', function () {
+        if (PA.ready) { PA.collect(); PA.renderAll(); if (n === 'stu') loadStudents(); if (n === 'adm') loadAdmins(); }
+      });
     });
     $('admPanelFile').addEventListener('change', onFilePicked);
 
