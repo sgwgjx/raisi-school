@@ -154,7 +154,7 @@ td{padding:9px;text-align:center;border-bottom:1px solid var(--border)}
 const SB={url:location.origin+'/sb',key:'sb_publishable_1jSLYdzfmthl8HqMckO2yw_-dPmfE8c'};
 const BUCKET='panel-files';
 const DB={student:{name:'',grade:'',cls:''},exams:[],sched:{'شنبه':[],'یکشنبه':[],'دوشنبه':[],'سه‌شنبه':[],'چهارشنبه':[]},res:[],vcls:[],events:[],site:{},news:[],SITE:'index.html'};
-const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه و اخبار','bell'],['prof','پروفایل','user'],['set','تنظیمات','gear']];
+const PAGES=[['dash','داشبورد','home'],['exams','آزمون‌های من','file'],['cal','تقویم','cal'],['sched','برنامه هفتگی','clock'],['res','منابع آموزشی','book'],['vcls','آموزش مجازی','vcr'],['news','اطلاعیه و اخبار','bell'],['prof','پروفایل','user']];
 const $=s=>document.querySelector(s);
 const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 const dg=s=>String(s==null?'':s).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).trim();
@@ -254,7 +254,6 @@ res(){if(!DB.res.length)return'<div class="card"><p class="empty">منبع آم�
 news(){return`<div class="card">${DB.news.map((n,i)=>`<div class="row nw" onclick="showNews(${i})"><div class="gr"><b>${esc(n.t)}</b><small>${esc(n.k)} · ${esc(n.d)}</small></div></div>`).join('')}</div>`},
 prof(){const s=DB.student;return`<div class="card" style="max-width:560px"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div class="av" style="width:72px;height:72px;font-size:1.8rem">${ic('user')}</div><div><h2 style="margin:0">${esc(s.name||'دانش‌آموز')}</h2>${s.grade||s.cls?`<span class="chip">${esc([s.grade,s.cls].filter(Boolean).join(' · '))}</span>`:''}</div></div>
  ${[['نام و نام خانوادگی',s.name],['پایه تحصیلی',s.grade],['کلاس',s.cls]].map(f=>`<div class="row"><div class="gr"><small>${f[0]}</small></div><b>${esc(f[1]||'—')}</b></div>`).join('')}</div>`},
-set(){return`<div class="card" style="max-width:560px"><h2>حساب کاربری</h2><div class="fld"><label>رمز عبور فعلی</label><input type="password" id="pw0" autocomplete="current-password" placeholder="••••••"></div><div class="fld"><label>رمز عبور جدید (حداقل ۶ نویسه)</label><input type="password" id="pw1" autocomplete="new-password" placeholder="••••••"></div><div class="fld"><label>تکرار رمز عبور جدید</label><input type="password" id="pw2" autocomplete="new-password" placeholder="••••••"></div><button class="btn btn-o" id="pwBtn" onclick="chgPw()">تغییر رمز</button></div>`}
 };
 
 /* ---------- آزمون‌ها ---------- */
@@ -306,9 +305,6 @@ async function finish(auto){const x=S.ex;if(!x||x.done||x.sending)return;x.sendi
 function zoomQ(n){const q=S.ex&&S.ex.qs[n];if(!q||!q.img)return;modal(`<img src="${esc(qImg(q))}" alt="تصویر سؤال" style="width:100%;height:auto;display:block;border-radius:8px">`)}
 function joinV(i){const u=((DB.vcls[i]||{}).url||'').trim();if(!okUrl(u))return toast('لینک این کلاس معتبر نیست');window.open(u,'_blank','noopener,noreferrer')}
 function cm(d){S.cm+=d;if(S.cm>12){S.cm=1;S.cy++}if(S.cm<1){S.cm=12;S.cy--}render()}
-async function chgPw(){const o=$('#pw0'),a=$('#pw1'),b=$('#pw2');if(!o.value||!a.value||!b.value)return toast('هر سه فیلد رمز را پر کنید');if(a.value.length<6)return toast('رمز عبور باید حداقل ۶ کاراکتر باشد');if(a.value!==b.value)return toast('رمز و تکرار آن یکسان نیستند');
- try{const r=await rpc('student_change_password',{p_token:tok(),p_old:dg(o.value),p_new:dg(a.value)});
-  if(r.ok){o.value=a.value=b.value='';toast('رمز عبور با موفقیت تغییر کرد')}else if(r.error==='wrong_old')toast('رمز فعلی اشتباه است');else if(r.error==='auth')toLogin();else toast('تغییر رمز انجام نشد')}catch(e){toast('ارتباط با سرور برقرار نشد')}}
 function toSite(h){try{sessionStorage.setItem('fromPanel','1')}catch(e){}location.href=DB.SITE+h}
 function showNews(i){const n=DB.news[i];if(!n)return;toSite('#news='+encodeURIComponent(n.t))}
 $('#menuBtn').onclick=()=>{$('#side').classList.add('open');$('#shade').classList.add('open')};
